@@ -60,7 +60,10 @@ private_lane :build_and_submit do |options|
   upload_to_testflight(skip_waiting_for_build_processing: true)
   deliver(
     app_identifier: options[:bundle_id],
+    metadata_path: "fastlane/metadata/#{options[:bundle_id]}",
+    screenshots_path: nil,
     automatic_release: false,
+    skip_screenshots: true,
     force: true
   )
 end

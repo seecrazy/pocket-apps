@@ -1,0 +1,1 @@
+TabStash iOS 是标签收纳伴侣端。通过 PocketTabStash.v1 JSON 导入浏览器插件保存的标签页集合，继续阅读、收藏、标记已读，也可以导出本机状态。

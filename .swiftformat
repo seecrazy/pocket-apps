@@ -5,3 +5,4 @@
 --stripunusedargs closure-only
 --header none
 --disable fileHeader,noForceTryInTests,conditionalAssignment
+--exclude Apps/*/Derived,Derived

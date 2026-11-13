@@ -1,3 +1,4 @@
+import PocketCore
 import PocketUI
 import SwiftData
 import SwiftUI
@@ -7,8 +8,11 @@ struct ContentView: View {
     @Query(sort: \CheckInPlanModel.createdAt) private var plans: [CheckInPlanModel]
     @Query private var records: [CheckInRecordModel]
     @State private var showsCreatePlan = false
+    @State private var scheduler: any NotificationScheduling = SystemNotificationScheduler()
+    @State private var deletingPlan: CheckInPlanModel?
 
     private let calculator = StreakCalculator()
+    private let library = SoloGuardLibrary()
 
     var body: some View {
         NavigationStack {
@@ -24,7 +28,7 @@ struct ContentView: View {
                                     .foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Image(systemName: "house.badge.shield.checkmark")
+                            Image(systemName: "house.fill")
                                 .font(.title)
                                 .foregroundStyle(.tint)
                         }
@@ -41,9 +45,12 @@ struct ContentView: View {
                             ForEach(plans) { plan in
                                 PlanCard(
                                     plan: plan,
-                                    todayIsCompleted: hasCompleted(plan: plan),
+                                    todayIsCompleted: library.isCompleted(plan: plan, records: records, day: Date()),
+                                    yesterdayIsMissed: library.missedPreviousDay(plan: plan, records: records, today: Date()),
                                     streak: calculator.streak(for: plan.id, records: records, today: Date()),
-                                    onCheckIn: { checkIn(plan) }
+                                    onToggle: { toggle(plan) },
+                                    onCheckIn: { checkIn(plan) },
+                                    onDelete: { deletingPlan = plan }
                                 )
                             }
                         }
@@ -62,17 +69,32 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showsCreatePlan) {
-                CreatePlanSheet()
+                CreatePlanSheet(scheduler: scheduler)
             }
-        }
-    }
-
-    private func hasCompleted(plan: CheckInPlanModel) -> Bool {
-        let day = Calendar.current.startOfDay(for: Date())
-        return records.contains {
-            $0.planID == plan.id
-                && Calendar.current.isDate($0.day, inSameDayAs: day)
-                && $0.completedAt != nil
+            .confirmationDialog(
+                "删除计划？",
+                isPresented: Binding(
+                    get: { deletingPlan != nil },
+                    set: {
+                        if !$0 {
+                            deletingPlan = nil
+                        }
+                    }
+                ),
+                titleVisibility: .visible
+            ) {
+                Button("删除计划和签到记录", role: .destructive) {
+                    if let plan = deletingPlan {
+                        delete(plan)
+                    }
+                    deletingPlan = nil
+                }
+                Button("取消", role: .cancel) {
+                    deletingPlan = nil
+                }
+            } message: {
+                Text("该操作会同时取消本地提醒，且无法恢复。")
+            }
         }
     }
 
@@ -84,13 +106,46 @@ struct ContentView: View {
         record?.completedAt = Date()
         try? modelContext.save()
     }
+
+    private func toggle(_ plan: CheckInPlanModel) {
+        plan.isEnabled.toggle()
+        try? modelContext.save()
+
+        Task {
+            if plan.isEnabled {
+                guard await scheduler.requestAuthorization() else { return }
+                try? await scheduler.scheduleDailyReminder(
+                    id: SoloGuardNotifications.id(for: plan.id),
+                    hour: plan.reminderHour,
+                    minute: plan.reminderMinute,
+                    title: "生活确认",
+                    body: "确认一下今天是否正常。"
+                )
+            } else {
+                await scheduler.cancel(ids: [SoloGuardNotifications.id(for: plan.id)])
+            }
+        }
+    }
+
+    private func delete(_ plan: CheckInPlanModel) {
+        Task {
+            await scheduler.cancel(ids: [SoloGuardNotifications.id(for: plan.id)])
+        }
+        let planID = plan.id
+        records.filter { $0.planID == planID }.forEach(modelContext.delete)
+        modelContext.delete(plan)
+        try? modelContext.save()
+    }
 }
 
 private struct PlanCard: View {
     let plan: CheckInPlanModel
     let todayIsCompleted: Bool
+    let yesterdayIsMissed: Bool
     let streak: Int
+    let onToggle: () -> Void
     let onCheckIn: () -> Void
+    let onDelete: () -> Void
 
     var body: some View {
         CardContainer {
@@ -105,9 +160,36 @@ private struct PlanCard: View {
                             tint: todayIsCompleted ? .green : .orange
                         )
                         StatusBarChip(text: "连续 \(streak) 天", systemImage: "flame", tint: .red)
+                        if yesterdayIsMissed {
+                            StatusBarChip(text: "昨日已错过", systemImage: "exclamationmark.triangle", tint: .orange)
+                        }
                     }
                 }
                 Spacer()
+                HStack(spacing: 8) {
+                    Button {
+                        onToggle()
+                    } label: {
+                        Image(systemName: plan.isEnabled ? "bell.fill" : "bell.slash")
+                            .foregroundStyle(plan.isEnabled ? Color.accentColor : Color.secondary)
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityLabel(plan.isEnabled ? "关闭提醒" : "开启提醒")
+
+                    Button(role: .destructive) {
+                        onDelete()
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityLabel("删除计划")
+                }
+            }
+
+            if !plan.isEnabled {
+                Text("提醒已关闭，仍可手动签到。")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
 
             PrimaryButton(todayIsCompleted ? "今日已确认" : "完成签到") {
@@ -123,6 +205,7 @@ private struct CreatePlanSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var title = ""
     @State private var reminder = Date()
+    let scheduler: any NotificationScheduling
 
     var body: some View {
         NavigationStack {
@@ -135,14 +218,27 @@ private struct CreatePlanSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") {
                         let components = Calendar.current.dateComponents([.hour, .minute], from: reminder)
+                        let planID = UUID()
                         modelContext.insert(
                             CheckInPlanModel(
+                                id: planID,
                                 title: title.isEmpty ? "日常确认" : title,
                                 reminderHour: components.hour ?? 9,
                                 reminderMinute: components.minute ?? 0
                             )
                         )
                         dismiss()
+
+                        Task {
+                            guard await scheduler.requestAuthorization() else { return }
+                            try? await scheduler.scheduleDailyReminder(
+                                id: SoloGuardNotifications.id(for: planID),
+                                hour: components.hour ?? 9,
+                                minute: components.minute ?? 0,
+                                title: "生活确认",
+                                body: "确认一下今天是否正常。"
+                            )
+                        }
                     }
                 }
                 ToolbarItem(placement: .cancellationAction) {

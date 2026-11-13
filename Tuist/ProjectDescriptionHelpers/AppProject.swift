@@ -25,21 +25,31 @@ public struct AppMetadata {
     }
 }
 
-public func appProject(metadata: AppMetadata, testDependencies: [TargetDependency] = []) -> Project {
+public func appProject(
+    metadata: AppMetadata,
+    additionalInfoPlist: [String: Plist.Value] = [:],
+    testDependencies: [TargetDependency] = []
+) -> Project {
     let appTarget = Target.target(
         name: metadata.name,
         destinations: .iOS,
         product: .app,
         bundleId: metadata.bundleID,
         deploymentTargets: .iOS("17.0"),
-        infoPlist: .extendingDefault(with: [
-            "CFBundleDisplayName": .string(metadata.displayName),
-            "CFBundleShortVersionString": .string(metadata.version),
-            "CFBundleVersion": .string("\(metadata.buildNumber)"),
-            "UILaunchScreen": .dictionary([:]),
-            "UISupportedInterfaceOrientations": .array([.string("UIInterfaceOrientationPortrait")]),
-            "ITSAppUsesNonExemptEncryption": .boolean(false),
-        ]),
+        infoPlist: {
+            var values: [String: Plist.Value] = [
+                "CFBundleDisplayName": .string(metadata.displayName),
+                "CFBundleShortVersionString": .string(metadata.version),
+                "CFBundleVersion": .string("\(metadata.buildNumber)"),
+                "UILaunchScreen": .dictionary([:]),
+                "UISupportedInterfaceOrientations": .array([.string("UIInterfaceOrientationPortrait")]),
+                "ITSAppUsesNonExemptEncryption": .boolean(false),
+            ]
+            for (key, value) in additionalInfoPlist {
+                values[key] = value
+            }
+            return InfoPlist.extendingDefault(with: values)
+        }(),
         sources: ["Sources/**"],
         resources: ["Resources/**"],
         dependencies: [

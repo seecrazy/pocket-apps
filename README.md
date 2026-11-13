@@ -1,33 +1,50 @@
 # Pocket Apps
 
-`pocket-apps` 是一个承载多个独立发布 iOS App 的 Monorepo。当前首批包含 SoloGuard、FocusBox、SlowCard、AmbientLog 与 TabStash iOS。
+`pocket-apps` 是一个多 App iOS Monorepo，采用 **Tuist + 本地 Swift Package + SwiftUI/SwiftData**。仓库中的每个 App 都是独立 target，拥有独立 Bundle ID、版本号、图标、隐私清单和发布节奏。
 
-## 产品状态
+## 产品
 
-仓库已完成 v1 最小实现：
+| App | 副标题 | v1.1 能力 | Bundle ID | 版本 |
+|---|---|---|---|---|
+| SoloGuard | 独居守护 | 本地生活确认计划、每日提醒、昨日异常提示、连续签到 | `com.pocketapps.sologuard` | `1.1.0` |
+| FocusBox | 专注盒子 | 专注计时、完成/放弃、重启恢复、今日与最近 7 天统计 | `com.pocketapps.focusbox` | `1.1.0` |
+| SlowCard | 慢递明信片 | 延迟解锁卡片、到达提醒、收藏、归档 | `com.pocketapps.slowcard` | `1.1.0` |
+| AmbientLog | 环境音记录仪 | 本机录音、中断保护、播放、搜索、重命名、删除 | `com.pocketapps.ambientlog` | `1.1.0` |
+| TabStash iOS | 标签收纳 | `PocketTabStash.v1` JSON 导入/导出、未读/收藏管理 | `com.pocketapps.tabstash` | `1.1.0` |
 
-- SoloGuard：本地生活确认计划与每日签到。
-- FocusBox：专注计时、完成/放弃与今日统计。
-- SlowCard：延迟解锁的写给自己的明信片。
-- AmbientLog：本机麦克风录音、播放与删除。
-- TabStash iOS：标签集合与继续阅读列表。
+TabStash 当前使用本地 JSON 文件作为插件与 iOS 之间的数据交换层；iCloud 容器尚未启用。
 
-以上功能当前以本机 SwiftData 数据为主；TabStash 的 iCloud 同步尚未接入，v1 中展示本地样例数据。
+## 发布状态
 
-## 文档入口
+仓库内工程发布项已完成：
 
-- 设计方案：[docs/DESIGN.md](docs/DESIGN.md)
-- 进展与待办：[docs/ROADMAP.md](docs/ROADMAP.md)
+- 五个 App 可构建、可运行，单元测试通过。
+- 每个 App 都有独立 1024×1024 App Icon。
+- 每个 App 都包含 `PrivacyInfo.xcprivacy`。
+- 权限拒绝、空数据、文件错误和录音中断都有明确 UI 反馈。
+- 破坏性操作均需要确认。
+- `ITSAppUsesNonExemptEncryption=false`。
+- AmbientLog 声明了 `NSMicrophoneUsageDescription`。
+- fastlane metadata 包含五个 App 的 App Store 文案骨架。
+
+实际提交 App Store 还需要 Apple 开发者账号、签名证书、App Store Connect API Key、截图和隐私问卷。
+
+## 文档
+
+- 总体设计：[docs/DESIGN.md](docs/DESIGN.md)
+- 隐私说明：[PRIVACY.md](PRIVACY.md)
+- 进度与待办：[docs/ROADMAP.md](docs/ROADMAP.md)
 - 会话交接：[docs/HANDOFF.md](docs/HANDOFF.md)
-- ADR：[docs/adr](docs/adr)
+- 架构决策：[docs/adr](docs/adr)
 
 ## 环境要求
 
 - macOS 15+
 - Xcode 16+
-- Tuist 4.216.6（仓库通过 `.tuist-version` 记录当前版本）
-- Ruby + Bundler（发布流水线使用）
-- SwiftLint / SwiftFormat（本地 lint）
+- Tuist `4.216.6`
+- Swift 5.9+
+- Ruby 3.3+（发布流水线）
+- SwiftLint / SwiftFormat
 
 ## 快速开始
 
@@ -38,51 +55,127 @@ cd pocket-apps
 open PocketApps.xcworkspace
 ```
 
-生成 Workspace 后，Xcode 左侧可以选择任意 App target 运行。所有 iOS App 的最低部署版本为 iOS 17。
+Tuist 生成的 `*.xcodeproj`、`*.xcworkspace` 与 `Derived/` 不提交。
 
 ## 常用命令
 
 ```bash
-# 生成 Xcode 工程
+# 生成 Xcode Workspace
 ./scripts/generate.sh
 
-# 检查格式与 SwiftLint
+# SwiftFormat + SwiftLint
 ./scripts/lint.sh
 
-# 运行本地 Package 单元测试
+# 三个共享包测试
 ./scripts/test.sh
 
-# 运行各 App 单元测试
-./scripts/test_apps.sh
+# 五个 App 测试
+IOS_SIMULATOR_NAME="iPhone 17" ./scripts/test_apps.sh
 
 # 构建五个 App
 ./scripts/build_apps.sh
+
+# 发布前完整检查
+./scripts/release_preflight.sh
 ```
+
+CI 中的模拟器默认是 `iPhone 16`，本地 Xcode 可按 `IOS_SIMULATOR_NAME` 覆盖。
+
+## 工程结构
+
+```text
+pocket-apps/
+├── Apps/
+│   ├── SoloGuard/
+│   ├── FocusBox/
+│   ├── SlowCard/
+│   ├── AmbientLog/
+│   ├── TabStash/
+│   └── _Template/
+├── Packages/
+│   ├── PocketCore/
+│   ├── PocketUI/
+│   └── PocketTestKit/
+├── Tuist/
+│   └── ProjectDescriptionHelpers/
+├── fastlane/
+├── scripts/
+├── .github/workflows/
+└── docs/
+```
+
+架构边界：
+
+1. App 之间不互相依赖。
+2. 共享包不包含任何 App 业务语义。
+3. `PocketCore` 提供通知、权限、触感、日志、KV 存储。
+4. `PocketUI` 只放可复用 SwiftUI 组件。
+5. 每个领域模型、状态机、提醒规则都留在对应 App 内。
+
+## 隐私与权限
+
+| 数据 | 存储 | 是否上传 |
+|---|---|---|
+| SoloGuard 计划与签到 | SwiftData / App 沙盒 | 否 |
+| FocusBox 会话与统计 | SwiftData / App 沙盒 | 否 |
+| SlowCard 卡片内容 | SwiftData / App 沙盒 | 否 |
+| AmbientLog 录音文件 | App 沙盒 Documents | 否 |
+| TabStash 标签页 | SwiftData / App 沙盒 | 否；导出由用户显式分享 |
+
+权限：
+
+- SoloGuard / SlowCard：本地通知，权限拒绝时不阻塞本地功能。
+- AmbientLog：麦克风，用途写入 Info.plist；录音只保存在本机。
+- TabStash：通过系统文件导入访问用户选择的 JSON 文件。
+
+每个 App 的 `PrivacyInfo.xcprivacy` 声明不追踪用户、不采集数据。
 
 ## 新增 App
 
 1. 复制 `Apps/_Template` 到 `Apps/<NewApp>`。
-2. 修改 `Project.swift` 里的 `AppMetadata`，包括 name、displayName、bundleID 和 version。
-3. 在 `Workspace.swift` 注册新目录。
-4. 执行 `./scripts/generate.sh`。
+2. 修改 `Project.swift` 中的 `AppMetadata`。
+3. 需要额外 Info.plist 键时使用 `additionalInfoPlist`。
+4. 在 `Workspace.swift` 注册目录。
+5. 运行 `./scripts/generate.sh`。
 
-不要提交 `*.xcodeproj` 或 `*.xcworkspace`。
+不要把业务逻辑放进 `Packages/`。
 
 ## 发布
 
-版本定义在 `Apps/<App>/Project.swift` 的 `AppMetadata.version`。发布时 tag 必须与该字段一致：
+版本定义在 `Apps/<App>/Project.swift`：
 
-```bash
-git tag SoloGuard@1.0.0
-git push origin SoloGuard@1.0.0
+```swift
+AppMetadata(
+    name: "SoloGuard",
+    bundleID: "com.pocketapps.sologuard",
+    version: "1.1.0"
+)
 ```
 
-`.github/workflows/release.yml` 会校验 tag、生成工程并调用对应 fastlane lane。TestFlight 上传需要先配置 App Store Connect API Key、Apple Developer Team ID、证书和 provisioning profile。
+Tag 必须与 manifest 版本一致：
 
-## 边界
+```bash
+git tag SoloGuard@1.1.0
+git push origin SoloGuard@1.1.0
+```
 
-- 共享包只放基础能力，不放 App 业务逻辑。
-- App 之间不互相依赖。
-- SoloGuard v1 不实现真实紧急联系人外发。
-- AmbientLog 录音只保存在 App 沙盒，不上传云端。
-- TabStash v1 只展示同步/样例标签页，不反向编辑浏览器插件。
+`release.yml` 会：
+
+1. 解析 tag 中的 App 与版本。
+2. 校验版本与 Project.swift 一致。
+3. `tuist generate`。
+4. 调用 fastlane lane 构建、签名并上传 TestFlight。
+
+App Store 文案位于 `fastlane/metadata/<bundle-id>/`。上线前请替换支持 URL 与隐私 URL 为最终域名，并补齐截图。
+
+发布秘密通过 GitHub Environment `app-store-release` 注入。
+
+## 故障排查
+
+| 问题 | 处理 |
+|---|---|
+| 找不到 Workspace | 先执行 `./scripts/generate.sh` |
+| 模拟器名称不存在 | 设置 `IOS_SIMULATOR_NAME` |
+| App Icon 报错 | 确认 `AppIcon.appiconset` 中有 1024×1024 RGB PNG |
+| fastlane 失败 | 检查 Team ID、match 仓库和 App Store Connect API Key |
+| TabStash 导入失败 | 确认 `schemaVersion` 为 1，URL 可解析 |

@@ -1,6 +1,7 @@
 *.xcodeproj
 *.xcworkspace
 Derived/
+Apps/*/Derived/
 .build/
 .swiftpm/
 xcuserdata/

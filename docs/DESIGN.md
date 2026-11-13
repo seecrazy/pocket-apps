@@ -1,7 +1,7 @@
 # Pocket Apps 设计文档
 
 > 状态：已采纳
-> 更新时间：2026-11-14
+> 更新时间：2026-11-14（v1.1 发布准备）
 
 ## 1. 目标与非目标
 
@@ -30,7 +30,7 @@
 | 2 | FocusBox | 专注盒子 | 注意力恢复与屏幕戒断 | `com.pocketapps.focusbox` | 本机会话与专注统计；v1 不做社交打卡 |
 | 3 | SlowCard | 慢递明信片 | 慢交互与情绪价值 | `com.pocketapps.slowcard` | 本地慢递卡片；v1 不做真实邮政寄送 |
 | 4 | AmbientLog | 环境音记录仪 | iOS 独占能力工具 | `com.pocketapps.ambientlog` | 本机录音、环境记录；不做自动上传 |
-| 5 | TabStash iOS | 标签收纳 | 浏览器插件伴侣 | `com.pocketapps.tabstash` | 读取 iCloud 同步的标签页集合并组织继续阅读；v1 不做浏览器执行注入 |
+| 5 | TabStash iOS | 标签收纳 | 浏览器插件伴侣 | `com.pocketapps.tabstash` | 通过 `PocketTabStash.v1` JSON 导入/导出标签页集合；不做浏览器执行注入 |
 
 ## 3. 架构总览
 
@@ -115,8 +115,8 @@ PocketCore
 
 ### TabStash iOS
 
-1. 用户在浏览器插件端把标签页集合保存到 iCloud 同步容器。
-2. iOS App 读取同步集合，展示未读与已读分组。
+1. 用户在浏览器插件端导出 `PocketTabStash.v1` JSON。
+2. iOS App 导入 JSON，展示未读与已读分组。
 3. 用户打开 URL 系统浏览器后手动标记已读。
 4. 列表支持按集合与收藏过滤。
 5. v1 iOS 侧不做插件协议反向写入；同步冲突以最近修改时间优先。
@@ -255,11 +255,11 @@ struct StashCollection {
 | SoloGuard | Notifications | 保留本地手动签到，展示重新开启入口 |
 | FocusBox | Notifications | 专注会话仍可运行，仅缺少结束提醒 |
 | AmbientLog | Microphone | 阻断录音，展示设置跳转与隐私说明 |
-| TabStash | iCloud / Documents | iCloud 未登录时展示本地占位集合与恢复指引 |
+| TabStash | Documents / File Import | 文件无效时提示原因；不注入插件 |
 
 ### 错误边界
 
-- 网络不可用不影响 v1 核心功能；TabStash 同步由 iCloud 负责。
+- 网络不可用不影响 v1 核心功能；TabStash 使用本地 JSON 导入/导出。
 - SwiftData 保存失败先重试一次，再显示可关闭的本地错误提示。
 - 音频录制失败立即停止计时，保留已生成文件（若存在）并提示失败原因。
 - URL 无法打开时保留卡片未读状态。
@@ -287,7 +287,7 @@ struct StashCollection {
 | 专注记录 | 本机 SwiftData | 否 |
 | 明信片内容 | 本机 SwiftData | 否 |
 | 录音文件 | App 沙盒 | 否 |
-| TabStash 标签页 | iCloud 同步容器 | 用户显式通过插件保存 |
+| TabStash 标签页 | 本机 SwiftData；用户导入 JSON | 否；导出走系统分享面板 |
 
 ## 8. 边界决策
 
@@ -306,6 +306,7 @@ struct StashCollection {
 - [x] `Apps/_Template` 可作为新增 App 模板。
 - [x] `tuist generate` 可生成工程。
 - [x] 所有 App target 可构建，五个 App 的单元测试通过。
+- [x] 每个 App 有隐私清单、独立图标、删除确认与空态。
 - [x] PocketCore / PocketUI / PocketTestKit 单元测试通过。
 
 ### 功能
@@ -314,7 +315,7 @@ struct StashCollection {
 - [x] FocusBox 可开始、完成或放弃专注会话并统计今日时长。
 - [x] SlowCard 可创建延迟解锁卡片并按日期解锁。
 - [x] AmbientLog 可请求权限、录制、播放与删除。
-- [x] TabStash iOS 可展示本地样例集合、打开 URL、切换已读与收藏。
+- [x] TabStash iOS 可导入 JSON、打开 URL、切换已读与收藏。
 
 ### 发布准备
 
@@ -328,7 +329,251 @@ struct StashCollection {
 | 风险 | 缓解 |
 |---|---|
 | Tuist 版本升级改变 manifest API | 锁定 `.tuist-version`，CI 使用相同版本 |
-| iCloud 同步字段演进导致插件与 iOS 不兼容 | TabStash 后续引入 schema version 字段与只读降级 |
+| TabStash schema 演进导致插件与 iOS 不兼容 | 引入 schema version 字段；不支持的版本整体拒绝 |
 | SwiftData 迁移破坏用户数据 | 每个模型修改前新增 migration note 与备份策略 |
 | 独居安全场景误发给紧急联系人 | v1 明确不做真实外发，后续功能必须通过单独隐私评审 |
 | 录音耗电与后台中断 | 后续接入 AVAudioSession interruption 处理和后台任务边界 |
+
+## 11. v1.1 增强：可靠性、提醒与数据互通
+
+> 状态：已采纳
+> 日期：2026-11-14
+
+### 11.1 目标
+
+- 在不引入云端后端的前提下，让五个 App 的核心数据更可靠。
+- 将提醒统一抽象到 `PocketCore.NotificationScheduling`，避免 App 各自散落通知实现。
+- 补齐录音中断、专注会话恢复、慢递到达提醒、TabStash 同步 schema 四类高价值边界。
+- 保持每个 App 独立发布；新增能力不要求五个 App 同步升级。
+
+### 11.2 非目标
+
+- 不引入 FocusBox 的 Screen Time / Family Controls 隔离。
+- 不实现 SoloGuard 紧急联系人外发。
+- 不把 AmbientLog 录音上传云端。
+- 不在 TabStash 中写入浏览器插件私有协议；iOS 只定义标准化导入/导出数据。
+
+### 11.3 模块增强
+
+#### PocketCore
+
+新增 `NotificationScheduling` 抽象：
+
+```swift
+protocol NotificationScheduling {
+    func requestAuthorization() async -> Bool
+    func scheduleDailyReminder(id: String, hour: Int, minute: Int, title: String, body: String) async throws
+    func scheduleAt(id: String, date: Date, title: String, body: String) async throws
+    func cancel(ids: [String]) async
+}
+```
+
+系统实现使用 `UNUserNotificationCenter`；测试与 UI preview 可使用内存实现。通知 ID 约定为：
+
+| App | 通知 ID |
+|---|---|
+| SoloGuard | `sologuard.plan.<uuid>` |
+| SlowCard | `slowcard.card.<uuid>` |
+| 其他 App | v1.1 不主动发送通知 |
+
+#### PocketUI
+
+新增可复用组件：
+
+- `TrendBarChart`：展示最近 N 天的整数趋势，FocusBox 使用。
+- `SearchField`：统一搜索输入，AmbientLog 与 TabStash 使用。
+- `ArchiveRow`：统一归档卡片与已收到的慢递卡片。
+
+### 11.4 App 级设计
+
+#### SoloGuard
+
+##### 用户流程
+
+1. 用户创建或更新计划时，App 请求通知授权。
+2. 授权成功后按计划 hour/minute 调度每日本地通知。
+3. 用户关闭计划时取消对应通知。
+4. 每日签到完成后，当天通知标记已读即可，无需重新调度。
+5. 进入 App 时检查昨天是否缺失签到；缺失记录展示为“已错过”，连续计数从今天重新开始。
+
+##### 数据状态
+
+```text
+计划启用 → 通知已调度 → 今日待确认 → 已确认
+计划禁用 → 通知已取消
+昨天缺失 → yesterday missed badge → 连续计数重置
+```
+
+##### 错误处理
+
+- 通知授权拒绝时仍允许本地手动签到，并在计划卡片提示“提醒未开启”。
+- 调度失败记录 OSLog，不阻塞保存计划。
+- 不做错过后的自动外发。
+
+#### FocusBox
+
+##### 会话恢复
+
+1. App 启动时查询 `running` 会话。
+2. 使用 `startedAt + plannedMinutes` 计算剩余时间。
+3. 剩余时间大于 0 时恢复倒计时。
+4. 剩余时间小于等于 0 时自动标记 `completed`，不弹窗等待用户确认。
+
+##### 统计
+
+新增最近 7 天趋势条形图，只统计 `completed` 会话：
+
+```swift
+struct DailyFocusSummary { var day: Date; var minutes: Int }
+```
+
+#### SlowCard
+
+##### 到达提醒
+
+1. 保存卡片时调度 `unlockAt` 本地通知。
+2. 删除卡片时取消通知。
+3. 授权失败不阻塞卡片创建。
+
+##### 归档
+
+新增 `归档` 过滤：
+
+```text
+已收到 + isFavorite == false → 归档
+```
+
+这不是新生命周期状态，只是视图分组，避免与 `traveling / received` 生命周期混淆。
+
+#### AmbientLog
+
+##### 录音中断
+
+1. 监听 `AVAudioSession.interruptionNotification`。
+2. `.began` 时立即停止录音，保留文件与已录时长。
+3. `.ended` 不自动恢复录音；用户手动确认后继续。
+4. 中断原因展示给用户，如电话、系统资源冲突、未知中断。
+
+##### 列表管理
+
+新增搜索与重命名：
+
+- 搜索匹配 `title`。
+- 重命名使用确认保存，不自动提交。
+- 删除仍然同时删除 SwiftData 记录与沙盒文件。
+
+#### TabStash iOS
+
+##### 同步 Schema v1
+
+定义 JSON 文档 `PocketTabStash.v1`：
+
+```json
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-14T00:00:00Z",
+  "collections": [
+    { "id": "UUID", "name": "String", "lastModifiedAt": "Date" }
+  ],
+  "tabs": [
+    {
+      "id": "UUID",
+      "title": "String",
+      "url": "String",
+      "collectionID": "UUID",
+      "lastModifiedAt": "Date",
+      "isRead": false,
+      "isFavorite": false
+    }
+  ]
+}
+```
+
+导入合并规则：
+
+1. 以 `id` 匹配集合与标签。
+2. 不存在的记录插入。
+3. 已存在的记录按 `lastModifiedAt` 最新者胜。
+4. `collectionID` 不存在时放入“导入集合”。
+5. 无效 URL 的标签跳过。
+6. `schemaVersion != 1` 时拒绝导入并提示版本不支持。
+
+iOS v1.1 通过本地 JSON 文件导入/导出验证 schema；iCloud 容器留到下一次交付。
+
+### 11.5 验收清单
+
+#### 基础
+
+- [x] `NotificationScheduling` 可注入、可测试。
+- [x] `TrendBarChart`、`SearchField`、`ArchiveRow` 可复用。
+- [x] 所有 App 构建通过。
+- [x] 新增单元测试通过。
+
+#### SoloGuard
+
+- [x] 创建计划时可调度每日提醒。
+- [x] 关闭计划可取消提醒。
+- [x] 昨天缺失签到时显示“已错过”。
+
+#### FocusBox
+
+- [x] App 重启后可恢复未完成倒计时。
+- [x] 最近 7 天统计展示。
+
+#### SlowCard
+
+- [x] 保存卡片可调度到达提醒。
+- [x] 删除卡片可取消提醒。
+- [x] 已收到且未收藏的卡片可归档查看。
+
+#### AmbientLog
+
+- [x] 录音中断自动停止。
+- [x] 中断原因可见。
+- [x] 录音列表支持搜索与重命名。
+
+#### TabStash
+
+- [x] 定义并实现 schema v1。
+- [x] 导入支持插入与最新修改时间合并。
+- [x] 无效 URL、孤儿 collectionID 与版本错误可安全处理。
+
+## 12. 发布准备清单
+
+> 状态：v1.1 已在本仓库准备就绪；实际 TestFlight 仍依赖 Apple 开发者账号与签名资源。
+
+### 工程发布项
+
+- [x] 五个 App 版本均为 `1.1.0`。
+- [x] Bundle ID 与 fastlane lane 一一对应。
+- [x] App Icon 提供独立 1024×1024 PNG。
+- [x] 每个 App 包含 `PrivacyInfo.xcprivacy`。
+- [x] `ITSAppUsesNonExemptEncryption=false`。
+- [x] AmbientLog 包含麦克风用途描述。
+- [x] 破坏性操作均有确认弹层。
+- [x] 核心空态、错误态与权限拒绝态可用。
+- [x] 单元测试覆盖状态机、过滤器、通知调度 fake 和 TabStash schema 合并。
+- [x] fastlane metadata 包含五个 App 的名称、副标题、描述、关键词、推广文案和版本说明。
+
+### App Store 依赖项
+
+- [ ] Apple Developer Program Team ID。
+- [ ] 五个 App Store Connect App 记录。
+- [ ] match 证书仓库和五个 provisioning profile。
+- [ ] App Store Connect API Key。
+- [ ] App Store 隐私问卷（见隐私声明表）。
+- [ ] 截图；将 metadata 中的支持/隐私 URL 替换为最终域名。
+
+### 签名与发布
+
+```bash
+./scripts/generate.sh
+./scripts/lint.sh
+./scripts/test.sh
+IOS_SIMULATOR_NAME="iPhone 16" ./scripts/test_apps.sh
+./scripts/build_apps.sh
+git tag SoloGuard@1.1.0
+git push origin SoloGuard@1.1.0
+```
+
+CI 会校验 tag 与 `Apps/<App>/Project.swift` 的版本一致。

@@ -1,3 +1,4 @@
+import PocketCore
 import PocketUI
 import SwiftData
 import SwiftUI
@@ -6,14 +7,15 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \SlowCardModel.unlockAt) private var cards: [SlowCardModel]
     @State private var showsCompose = false
-    @State private var filter: CardFilter = .all
+    @State private var filter: SlowCardFilter = .all
+    @State private var scheduler: any NotificationScheduling = SystemNotificationScheduler()
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
                     Picker("过滤", selection: $filter) {
-                        ForEach(CardFilter.allCases) { item in
+                        ForEach(SlowCardFilter.allCases) { item in
                             Text(item.title).tag(item)
                         }
                     }
@@ -21,14 +23,14 @@ struct ContentView: View {
 
                     if filteredCards.isEmpty {
                         EmptyStateView(
-                            systemImage: "envelope.open.path",
+                            systemImage: "envelope.open.fill",
                             title: "还没有慢递明信片",
                             message: "写一张给自己的卡片，让它在未来某一天到达。"
                         )
                     } else {
                         LazyVStack(spacing: 12) {
                             ForEach(filteredCards) { card in
-                                SlowCardView(card: card)
+                                SlowCardView(card: card, scheduler: scheduler)
                             }
                         }
                     }
@@ -46,47 +48,22 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showsCompose) {
-                ComposeCardSheet()
+                ComposeCardSheet(scheduler: scheduler)
             }
         }
     }
 
     private var filteredCards: [SlowCardModel] {
-        cards.filter { card in
-            switch filter {
-            case .all: return true
-            case .traveling: return card.status() == .traveling
-            case .received: return card.status() == .received
-            case .favorite: return card.isFavorite
-            }
-        }
-    }
-}
-
-private enum CardFilter: String, CaseIterable, Identifiable {
-    case all
-    case traveling
-    case received
-    case favorite
-
-    var id: String {
-        rawValue
-    }
-
-    var title: String {
-        switch self {
-        case .all: return "全部"
-        case .traveling: return "在路上"
-        case .received: return "已收到"
-        case .favorite: return "收藏"
-        }
+        SlowCardLibrary.filtered(cards, by: filter)
     }
 }
 
 private struct SlowCardView: View {
     @Environment(\.modelContext) private var modelContext
     let card: SlowCardModel
+    let scheduler: any NotificationScheduling
     @State private var showsBody = false
+    @State private var showsDeleteConfirmation = false
 
     var body: some View {
         CardContainer {
@@ -104,12 +81,21 @@ private struct SlowCardView: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button {
-                    card.isFavorite.toggle()
-                    try? modelContext.save()
-                } label: {
-                    Image(systemName: card.isFavorite ? "star.fill" : "star")
-                        .foregroundStyle(.yellow)
+                HStack(spacing: 8) {
+                    Button {
+                        card.isFavorite.toggle()
+                        try? modelContext.save()
+                    } label: {
+                        Image(systemName: card.isFavorite ? "star.fill" : "star")
+                            .foregroundStyle(.yellow)
+                    }
+                    .accessibilityLabel(card.isFavorite ? "取消收藏" : "收藏")
+                    Button(role: .destructive) {
+                        showsDeleteConfirmation = true
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .accessibilityLabel("删除明信片")
                 }
             }
 
@@ -123,6 +109,24 @@ private struct SlowCardView: View {
                 }
             }
         }
+        .confirmationDialog(
+            "删除明信片？",
+            isPresented: $showsDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("删除", role: .destructive, action: delete)
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("该操作会删除卡片内容并取消到达提醒，且无法恢复。")
+        }
+    }
+
+    private func delete() {
+        Task {
+            await scheduler.cancel(ids: [SlowCardNotifications.id(for: card.id)])
+        }
+        modelContext.delete(card)
+        try? modelContext.save()
     }
 }
 
@@ -132,6 +136,7 @@ private struct ComposeCardSheet: View {
     @State private var title = ""
     @State private var bodyText = ""
     @State private var selectedDays = 30
+    let scheduler: any NotificationScheduling
 
     private let delayOptions = [7, 30, 90, 180]
 
@@ -157,15 +162,28 @@ private struct ComposeCardSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") {
                         let now = Date()
+                        let cardID = UUID()
+                        let unlockAt = Calendar.current.date(byAdding: .day, value: selectedDays, to: now) ?? now
                         modelContext.insert(
                             SlowCardModel(
+                                id: cardID,
                                 title: title.isEmpty ? "给自己的信" : title,
                                 body: bodyText,
                                 createdAt: now,
-                                unlockAt: Calendar.current.date(byAdding: .day, value: selectedDays, to: now) ?? now
+                                unlockAt: unlockAt
                             )
                         )
                         dismiss()
+
+                        Task {
+                            guard await scheduler.requestAuthorization() else { return }
+                            try? await scheduler.scheduleAt(
+                                id: SlowCardNotifications.id(for: cardID),
+                                date: unlockAt,
+                                title: "一张明信片到达了",
+                                body: "写给自己的内容现在可以打开。"
+                            )
+                        }
                     }
                 }
                 ToolbarItem(placement: .cancellationAction) {

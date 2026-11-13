@@ -7,7 +7,10 @@ let project = appProject(
         displayName: "AmbientLog",
         subtitle: "环境音记录仪",
         bundleID: "com.pocketapps.ambientlog",
-        version: "1.0.0"
+        version: "1.1.0"
     ),
+    additionalInfoPlist: [
+        "NSMicrophoneUsageDescription": .string("用于录制你主动选择保存的环境音。录音只保存在 App 沙盒内。"),
+    ],
     testDependencies: [.package(product: "PocketTestKit")]
 )

@@ -1,6 +1,7 @@
 import PocketUI
 import SwiftData
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
@@ -8,11 +9,23 @@ struct ContentView: View {
     @Query(sort: \StashedTabModel.lastModifiedAt, order: .reverse) private var tabs: [StashedTabModel]
     @State private var selectedCollectionID: UUID?
     @State private var filter: TabFilter = .unread
+    @State private var showsImporter = false
+    @State private var exportFile: ExportFile?
+    @State private var syncMessage: String?
+    @State private var deletingTab: StashedTabModel?
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
+                    if let syncMessage {
+                        CardContainer {
+                            Text(syncMessage)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
                     CollectionFilterCard(
                         collections: collections,
                         selectedCollectionID: selectedCollectionID,
@@ -40,7 +53,8 @@ struct ContentView: View {
                                     collectionName: collectionName(for: tab.collectionID),
                                     onOpen: { open(tab) },
                                     onToggleRead: { toggleRead(tab) },
-                                    onToggleFavorite: { toggleFavorite(tab) }
+                                    onToggleFavorite: { toggleFavorite(tab) },
+                                    onDelete: { deletingTab = tab }
                                 )
                             }
                         }
@@ -49,10 +63,62 @@ struct ContentView: View {
                 .padding(16)
             }
             .navigationTitle("TabStash")
-            .onAppear {
-                if collections.isEmpty {
-                    seedSampleData()
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        Button {
+                            showsImporter = true
+                        } label: {
+                            Label("导入 JSON", systemImage: "square.and.arrow.down")
+                        }
+
+                        Button {
+                            exportJSON()
+                        } label: {
+                            Label("导出 JSON", systemImage: "square.and.arrow.up")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
                 }
+            }
+            .fileImporter(
+                isPresented: $showsImporter,
+                allowedContentTypes: [.json]
+            ) { result in
+                importJSON(from: result)
+            }
+            .sheet(item: $exportFile) { file in
+                ShareLink(item: file.url, preview: SharePreview("PocketTabStash.v1.json")) {
+                    Text("分享导出的标签页 JSON")
+                }
+                .padding()
+                .presentationDetents([.medium])
+            }
+            .confirmationDialog(
+                "删除标签页？",
+                isPresented: Binding(
+                    get: { deletingTab != nil },
+                    set: {
+                        if !$0 {
+                            deletingTab = nil
+                        }
+                    }
+                ),
+                titleVisibility: .visible
+            ) {
+                Button("删除", role: .destructive) {
+                    if let tab = deletingTab {
+                        modelContext.delete(tab)
+                        try? modelContext.save()
+                    }
+                    deletingTab = nil
+                }
+                Button("取消", role: .cancel) {
+                    deletingTab = nil
+                }
+            } message: {
+                Text("删除本机标签页记录，不会影响浏览器插件原始数据。")
             }
         }
     }
@@ -91,27 +157,52 @@ struct ContentView: View {
         try? modelContext.save()
     }
 
-    private func seedSampleData() {
-        let collection = StashCollectionModel(name: "稍后阅读", lastModifiedAt: Date())
-        modelContext.insert(collection)
-        modelContext.insert(
-            StashedTabModel(
-                title: "SwiftUI 官方文档",
-                urlString: "https://developer.apple.com/documentation/swiftui",
-                collectionID: collection.id,
-                lastModifiedAt: Date()
-            )
+    private func exportJSON() {
+        let document = TabStashSyncService.makeDocument(
+            collections: collections,
+            tabs: tabs,
+            generatedAt: Date()
         )
-        modelContext.insert(
-            StashedTabModel(
-                title: "SwiftData 文档",
-                urlString: "https://developer.apple.com/documentation/swiftdata",
-                collectionID: collection.id,
-                lastModifiedAt: Date().addingTimeInterval(-60)
-            )
-        )
-        try? modelContext.save()
+
+        do {
+            let data = try TabStashSyncService.encode(document)
+            let url = FileManager.default.temporaryDirectory
+                .appending(path: "PocketTabStash.v1-\(Int(Date().timeIntervalSince1970)).json")
+            try data.write(to: url, options: .atomic)
+            exportFile = ExportFile(url: url)
+            syncMessage = "已生成 JSON，可以分享保存。"
+        } catch {
+            syncMessage = "导出失败：\(error.localizedDescription)"
+        }
     }
+
+    private func importJSON(from result: Result<URL, Error>) {
+        switch result {
+        case let .failure(error):
+            syncMessage = "选择文件失败：\(error.localizedDescription)"
+        case let .success(url):
+            let secured = url.startAccessingSecurityScopedResource()
+            defer {
+                if secured {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+
+            do {
+                let data = try Data(contentsOf: url)
+                let document = try TabStashSyncService.decode(data)
+                let counts = try TabStashSyncService.importDocument(document, into: modelContext)
+                syncMessage = "导入完成：新增 \(counts.insertedTabs) 条、更新 \(counts.updatedTabs) 条、跳过 \(counts.skippedInvalidURLs) 条。"
+            } catch {
+                syncMessage = "导入失败：\(error.localizedDescription)"
+            }
+        }
+    }
+}
+
+private struct ExportFile: Identifiable {
+    let id = UUID()
+    let url: URL
 }
 
 private enum TabFilter: String, CaseIterable, Identifiable {
@@ -168,6 +259,7 @@ private struct StashedTabCard: View {
     let onOpen: () -> Void
     let onToggleRead: () -> Void
     let onToggleFavorite: () -> Void
+    let onDelete: () -> Void
 
     var body: some View {
         CardContainer {
@@ -185,6 +277,11 @@ private struct StashedTabCard: View {
                         Image(systemName: tab.isFavorite ? "star.fill" : "star")
                             .foregroundStyle(.yellow)
                     }
+                    .accessibilityLabel(tab.isFavorite ? "取消收藏" : "收藏")
+                    Button(role: .destructive, action: onDelete) {
+                        Image(systemName: "trash")
+                    }
+                    .accessibilityLabel("删除标签页")
                 }
 
                 Text(tab.urlString)

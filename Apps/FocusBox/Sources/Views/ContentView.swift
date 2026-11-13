@@ -40,6 +40,7 @@ struct ContentView: View {
                 .padding(16)
             }
             .navigationTitle("FocusBox")
+            .onAppear(perform: recoverSession)
             .onDisappear {
                 timer?.invalidate()
             }
@@ -51,6 +52,10 @@ struct ContentView: View {
         modelContext.insert(session)
         activeSession = session
         remainingSeconds = selectedMinutes * 60
+        startTimer()
+    }
+
+    private func startTimer() {
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
             if remainingSeconds > 0 {
@@ -58,6 +63,25 @@ struct ContentView: View {
             } else {
                 completeSession()
             }
+        }
+    }
+
+    private func recoverSession() {
+        guard activeSession == nil else { return }
+        let now = Date()
+        guard let session = sessions.first(where: { $0.status == FocusSessionStatus.running.rawValue }) else { return }
+
+        switch FocusSessionRecovery.decision(session: session, now: now) {
+        case let .resume(secondsLeft):
+            activeSession = session
+            remainingSeconds = secondsLeft
+            startTimer()
+        case let .complete(date):
+            session.completedAt = date
+            session.status = FocusSessionStatus.completed.rawValue
+            try? modelContext.save()
+        case .none:
+            break
         }
     }
 
@@ -155,18 +179,37 @@ private struct StatsCard: View {
 
     var body: some View {
         CardContainer {
-            HStack {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("今日专注")
-                        .font(.headline)
-                    Text("\(calculator.completedMinutesToday(sessions: sessions, today: Date())) 分钟")
-                        .font(.title2.weight(.semibold))
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("今日专注")
+                            .font(.headline)
+                        Text("\(calculator.completedMinutesToday(sessions: sessions, today: Date())) 分钟")
+                            .font(.title2.weight(.semibold))
+                    }
+                    Spacer()
+                    Image(systemName: "brain.head.profile")
+                        .font(.title)
+                        .foregroundStyle(.tint)
                 }
-                Spacer()
-                Image(systemName: "brain.head.profile")
-                    .font(.title)
-                    .foregroundStyle(.tint)
+
+                TrendBarChart(
+                    title: "最近 7 天",
+                    unit: "每日已完成专注分钟数",
+                    data: trendValues
+                )
             }
+        }
+    }
+
+    private var trendValues: [TrendBarChart.TrendValue] {
+        let formatter = DateFormatter()
+        formatter.locale = Locale.current
+        formatter.calendar = Calendar.current
+        formatter.dateFormat = "EEE"
+
+        return calculator.completedMinutesForLastDays(sessions: sessions, today: Date(), days: 7).map {
+            TrendBarChart.TrendValue(label: formatter.string(from: $0.day), value: $0.minutes)
         }
     }
 }

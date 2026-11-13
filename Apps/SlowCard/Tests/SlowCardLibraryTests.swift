@@ -1,0 +1,24 @@
+@testable import SlowCard
+import XCTest
+
+final class SlowCardLibraryTests: XCTestCase {
+    func testFiltersIncludingArchive() {
+        let now = Date()
+        let traveling = SlowCardModel(title: "Traveling", body: "Body", createdAt: now, unlockAt: now.addingTimeInterval(86400))
+        let received = SlowCardModel(title: "Received", body: "Body", createdAt: now, unlockAt: now.addingTimeInterval(-1))
+        let favorite = SlowCardModel(
+            title: "Favorite",
+            body: "Body",
+            createdAt: now,
+            unlockAt: now.addingTimeInterval(-1),
+            isFavorite: true
+        )
+        let cards = [traveling, received, favorite]
+
+        XCTAssertEqual(SlowCardLibrary.filtered(cards, by: .all, now: now).count, 3)
+        XCTAssertEqual(SlowCardLibrary.filtered(cards, by: .traveling, now: now), [traveling])
+        XCTAssertEqual(SlowCardLibrary.filtered(cards, by: .received, now: now), [received, favorite])
+        XCTAssertEqual(SlowCardLibrary.filtered(cards, by: .favorite, now: now), [favorite])
+        XCTAssertEqual(SlowCardLibrary.filtered(cards, by: .archive, now: now), [received])
+    }
+}

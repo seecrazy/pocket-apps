@@ -3,6 +3,9 @@ included:
   - Packages
   - Tuist
 
+excluded:
+  - "**/Derived"
+
 disabled_rules:
   - trailing_whitespace
   - trailing_comma

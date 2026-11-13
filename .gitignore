@@ -1,0 +1,16 @@
+*.xcodeproj
+*.xcworkspace
+Derived/
+.build/
+.swiftpm/
+xcuserdata/
+*.xcuserstate
+.DS_Store
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+*.ipa
+*.dSYM.zip
+.env
+.env.*

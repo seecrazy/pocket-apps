@@ -1,0 +1,21 @@
+included:
+  - Apps
+  - Packages
+  - Tuist
+
+disabled_rules:
+  - trailing_whitespace
+  - trailing_comma
+
+line_length:
+  warning: 140
+  error: 180
+
+type_body_length:
+  warning: 320
+
+identifier_name:
+  min_length: 2
+  excluded:
+    - id
+    - url

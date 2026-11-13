@@ -1,0 +1,2 @@
+app_identifier("com.pocketapps.sologuard")
+apple_team_id(ENV["APPLE_TEAM_ID"])

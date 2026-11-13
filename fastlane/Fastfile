@@ -1,0 +1,74 @@
+default_platform(:ios)
+
+lane :sologuard_beta do
+  build_and_upload(scheme: "SoloGuard", bundle_id: "com.pocketapps.sologuard")
+end
+
+lane :sologuard_release do
+  build_and_submit(scheme: "SoloGuard", bundle_id: "com.pocketapps.sologuard")
+end
+
+lane :focusbox_beta do
+  build_and_upload(scheme: "FocusBox", bundle_id: "com.pocketapps.focusbox")
+end
+
+lane :focusbox_release do
+  build_and_submit(scheme: "FocusBox", bundle_id: "com.pocketapps.focusbox")
+end
+
+lane :slowcard_beta do
+  build_and_upload(scheme: "SlowCard", bundle_id: "com.pocketapps.slowcard")
+end
+
+lane :slowcard_release do
+  build_and_submit(scheme: "SlowCard", bundle_id: "com.pocketapps.slowcard")
+end
+
+lane :ambientlog_beta do
+  build_and_upload(scheme: "AmbientLog", bundle_id: "com.pocketapps.ambientlog")
+end
+
+lane :ambientlog_release do
+  build_and_submit(scheme: "AmbientLog", bundle_id: "com.pocketapps.ambientlog")
+end
+
+lane :tabstash_beta do
+  build_and_upload(scheme: "TabStash", bundle_id: "com.pocketapps.tabstash")
+end
+
+lane :tabstash_release do
+  build_and_submit(scheme: "TabStash", bundle_id: "com.pocketapps.tabstash")
+end
+
+private_lane :build_and_upload do |options|
+  setup_ci
+  sync_profiles(bundle_id: options[:bundle_id])
+  build_app(
+    scheme: options[:scheme],
+    export_method: "app-store"
+  )
+  upload_to_testflight(skip_waiting_for_build_processing: false)
+end
+
+private_lane :build_and_submit do |options|
+  setup_ci
+  sync_profiles(bundle_id: options[:bundle_id])
+  build_app(
+    scheme: options[:scheme],
+    export_method: "app-store"
+  )
+  upload_to_testflight(skip_waiting_for_build_processing: true)
+  deliver(
+    app_identifier: options[:bundle_id],
+    automatic_release: false,
+    force: true
+  )
+end
+
+def sync_profiles(bundle_id:)
+  match(
+    type: "appstore",
+    app_identifier: bundle_id,
+    readonly: true
+  )
+end

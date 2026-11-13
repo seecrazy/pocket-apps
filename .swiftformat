@@ -1,0 +1,7 @@
+--swiftversion 5.9
+--indent 4
+--maxwidth 140
+--semicolons false
+--stripunusedargs closure-only
+--header none
+--disable fileHeader,noForceTryInTests,conditionalAssignment

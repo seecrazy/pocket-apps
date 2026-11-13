@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*@*"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-15
+    environment: app-store-release
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse tag
+        id: app
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          app="${TAG%@*}"
+          version="${TAG#*@}"
+          if [ ! -d "Apps/$app" ]; then
+            echo "Unknown app directory: Apps/$app"
+            exit 1
+          fi
+          if ! grep -q "version: \"$version\"" "Apps/$app/Project.swift"; then
+            echo "Tag version $version does not match Apps/$app/Project.swift"
+            exit 1
+          fi
+          lower_app="$(echo "$app" | tr '[:upper:]' '[:lower:]')"
+          echo "app=$app" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "lane=${lower_app}_beta" >> "$GITHUB_OUTPUT"
+      - name: Install Tuist
+        run: brew install tuist
+      - name: Generate Xcode workspace
+        run: tuist generate --no-open
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: false
+      - name: Install fastlane
+        run: gem install fastlane --no-document
+      - name: Build and upload to TestFlight
+        env:
+          APP_STORE_CONNECT_API_KEY_URL: ${{ secrets.APP_STORE_CONNECT_API_KEY_URL }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: fastlane "${{ steps.app.outputs.lane }}"

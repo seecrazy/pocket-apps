@@ -566,6 +566,8 @@ iOS v1.1 通过本地 JSON 文件导入/导出验证 schema；iCloud 容器留�
 
 ### 签名与发布
 
+本机真机部署使用自动签名。开发者可通过 `Tuist/Signing.xcconfig` 注入 `DEVELOPMENT_TEAM`，该文件不入库；也可以在 Xcode `Signing & Capabilities` 中选择 Team。iPhone 14 需要升级到 iOS 17+ 并开启 Developer Mode。
+
 ```bash
 ./scripts/generate.sh
 ./scripts/lint.sh

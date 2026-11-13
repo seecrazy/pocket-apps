@@ -63,6 +63,7 @@
 - [x] 空态、错误态和权限拒绝态。
 - [x] 状态机、过滤器、通知调度、schema 合并测试。
 - [x] 本机 `release_preflight.sh` 全量通过。
+- [x] 支持通过 `Tuist/Signing.xcconfig` 配置本机真机签名。
 
 ## 待完成
 

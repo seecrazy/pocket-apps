@@ -14,6 +14,8 @@
 - AmbientLog 支持中断保护、搜索、重命名。
 - TabStash 定义并实现 JSON schema v1。
 - 五个 App 升至 `1.1.0`，补齐隐私清单和发布级 UI 边界。
+- README 重写为开源仓库结构，并补充 iPhone 14 真机部署说明。
+- Tuist 支持通过本地 `Tuist/Signing.xcconfig` 注入 `DEVELOPMENT_TEAM`。
 
 ## 当前可验证状态
 

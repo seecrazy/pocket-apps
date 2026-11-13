@@ -2,6 +2,7 @@
 *.xcworkspace
 Derived/
 Apps/*/Derived/
+Tuist/Signing.xcconfig
 .build/
 .swiftpm/
 xcuserdata/

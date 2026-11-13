@@ -1,3 +1,4 @@
+import Foundation
 import ProjectDescription
 
 public struct AppMetadata {
@@ -30,32 +31,22 @@ public func appProject(
     additionalInfoPlist: [String: Plist.Value] = [:],
     testDependencies: [TargetDependency] = []
 ) -> Project {
+    let signingSettings = localSigningSettings()
+
     let appTarget = Target.target(
         name: metadata.name,
         destinations: .iOS,
         product: .app,
         bundleId: metadata.bundleID,
         deploymentTargets: .iOS("17.0"),
-        infoPlist: {
-            var values: [String: Plist.Value] = [
-                "CFBundleDisplayName": .string(metadata.displayName),
-                "CFBundleShortVersionString": .string(metadata.version),
-                "CFBundleVersion": .string("\(metadata.buildNumber)"),
-                "UILaunchScreen": .dictionary([:]),
-                "UISupportedInterfaceOrientations": .array([.string("UIInterfaceOrientationPortrait")]),
-                "ITSAppUsesNonExemptEncryption": .boolean(false),
-            ]
-            for (key, value) in additionalInfoPlist {
-                values[key] = value
-            }
-            return InfoPlist.extendingDefault(with: values)
-        }(),
+        infoPlist: appInfoPlist(metadata: metadata, additionalInfoPlist: additionalInfoPlist),
         sources: ["Sources/**"],
         resources: ["Resources/**"],
         dependencies: [
             .package(product: "PocketCore"),
             .package(product: "PocketUI"),
-        ]
+        ],
+        settings: signingSettings
     )
 
     let testTarget = Target.target(
@@ -66,7 +57,8 @@ public func appProject(
         deploymentTargets: .iOS("17.0"),
         infoPlist: .default,
         sources: ["Tests/**"],
-        dependencies: [.target(name: metadata.name)] + testDependencies
+        dependencies: [.target(name: metadata.name)] + testDependencies,
+        settings: signingSettings
     )
 
     return Project(
@@ -77,5 +69,46 @@ public func appProject(
             .package(path: "../../Packages/PocketTestKit"),
         ],
         targets: [appTarget, testTarget]
+    )
+}
+
+private func appInfoPlist(
+    metadata: AppMetadata,
+    additionalInfoPlist: [String: Plist.Value]
+) -> InfoPlist {
+    var values: [String: Plist.Value] = [
+        "CFBundleDisplayName": .string(metadata.displayName),
+        "CFBundleShortVersionString": .string(metadata.version),
+        "CFBundleVersion": .string("\(metadata.buildNumber)"),
+        "UILaunchScreen": .dictionary([:]),
+        "UISupportedInterfaceOrientations": .array([.string("UIInterfaceOrientationPortrait")]),
+        "ITSAppUsesNonExemptEncryption": .boolean(false),
+    ]
+    for (key, value) in additionalInfoPlist {
+        values[key] = value
+    }
+    return InfoPlist.extendingDefault(with: values)
+}
+
+private func localSigningSettings() -> Settings {
+    let configURL = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .appendingPathComponent("Signing.xcconfig")
+
+    guard FileManager.default.fileExists(atPath: configURL.path) else {
+        return .settings(base: [
+            "CODE_SIGN_STYLE": .string("Automatic"),
+        ])
+    }
+
+    return .settings(
+        base: [
+            "CODE_SIGN_STYLE": .string("Automatic"),
+        ],
+        configurations: [
+            .debug(name: .debug, xcconfig: .relativeToRoot("Tuist/Signing.xcconfig")),
+            .release(name: .release, xcconfig: .relativeToRoot("Tuist/Signing.xcconfig")),
+        ]
     )
 }

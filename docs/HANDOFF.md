@@ -27,6 +27,10 @@
 
 第三轮产品修正已采纳：FocusBox 改为可配置 App 内锁定并用墙钟恢复倒计时；AmbientLog 增加后台音频模式和 dBFS 波形；SoloGuard 增加本机守护联系人与显式安全状态分享。
 
+AmbientLog 已增加 dBFS 说明卡片和可读音量描述；后续可继续增加后台持续 metering 的实现。
+
+重要修正：iOS 无法让第三方 App 阻止系统切屏。原“App 内锁定”必须改名为“App 内遮罩”；真正锁机应走 Family Controls + Managed Settings 的 Screen Time 盾牌，需要 entitlement 和用户授权。
+
 当前实现已进入 v1.2.0：SoloGuard / FocusBox / AmbientLog 的第三轮核心能力已完成并通过单元测试；Fastlane metadata 已同步。
 
 ## 当前可验证状态
@@ -52,3 +56,7 @@ cd /Users/xiaoyyu/IdeaProjects/pocket-apps
 - 不要提交 `*.xcodeproj`、`*.xcworkspace`、`Derived/`。
 - 不要把 App 业务逻辑移动到 `Packages/`。
 - Tag 版本必须与对应 `Project.swift` 的 `appVersion` 一致。
+
+## 当前迭代
+
+第四轮开始对标成熟产品：SoloGuard 对标 Reminders/Streaks，FocusBox 对标 Forest/Session，SlowCard 对标 FutureMe，AmbientLog 对标 Voice Memos，TabStash 对标 Pocket/Instapaper。

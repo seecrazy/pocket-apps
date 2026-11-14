@@ -219,3 +219,20 @@ enum TabStashSyncService {
         }
     }
 }
+
+enum TabStashLibrary {
+    static func unread(_ tabs: [StashedTabModel]) -> [StashedTabModel] {
+        tabs.filter { !$0.isRead }
+    }
+
+    static func markAllRead(_ tabs: [StashedTabModel], now: Date = Date()) -> Int {
+        var changed = 0
+        for tab in tabs {
+            guard !tab.isRead else { continue }
+            tab.isRead = true
+            tab.lastModifiedAt = now
+            changed += 1
+        }
+        return changed
+    }
+}

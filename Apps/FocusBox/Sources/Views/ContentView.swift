@@ -6,7 +6,7 @@ import SwiftUI
 struct ContentView: View {
     @AppStorage("focusbox.hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("focusbox.defaultMinutes") private var defaultMinutes = 25
-    @AppStorage("focusbox.lockMode") private var lockMode = FocusLockMode.off.rawValue
+    @AppStorage("focusbox.lockMode") private var lockMode = FocusLockMode.overlay.rawValue
     @State private var haptics: any HapticPerformer = SystemHaptics()
 
     var body: some View {
@@ -103,13 +103,15 @@ private struct FocusView: View {
                     )
                 }
 
+                StreakCard(sessions: sessions)
+
                 TodayCard(sessions: sessions, calculator: calculator)
             }
             .padding(16)
         }
         .navigationTitle("FocusBox")
         .onAppear(perform: recoverSession)
-        .onChange(of: scenePhase) { phase in
+        .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
             refreshRemaining()
         }
@@ -117,7 +119,7 @@ private struct FocusView: View {
             timer?.invalidate()
         }
         .fullScreenCover(isPresented: Binding(
-            get: { activeSession != nil && lockMode == .app },
+            get: { activeSession != nil && lockMode == .overlay },
             set: { _ in }
         )) {
             if let session = activeSession {
@@ -306,9 +308,12 @@ struct ActiveSessionCard: View {
                         .multilineTextAlignment(.center)
                 }
                 Text(timeString)
-                    .font(.system(size: 52, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
-                ProgressView(value: progress)
+                    .hidden()
+                ProgressRing(
+                    progress: progress,
+                    title: timeString,
+                    detail: "\(Int(progress * 100))%"
+                )
                 HStack {
                     Button(isPaused ? "继续" : "暂停") {
                         onTogglePause()
@@ -359,6 +364,7 @@ private struct StatsView: View {
         ScrollView {
             VStack(spacing: 16) {
                 TrendCard(sessions: sessions, calculator: calculator)
+                StreakCard(sessions: sessions)
                 RecentSessionsCard(sessions: Array(sessions.prefix(12)))
             }
             .padding(16)
@@ -433,6 +439,28 @@ private struct RecentSessionsCard: View {
     }
 }
 
+private struct StreakCard: View {
+    let sessions: [FocusSessionModel]
+    private let streakCalculator = FocusStreakCalculator()
+
+    var body: some View {
+        CardContainer {
+            HStack {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("连续专注")
+                        .font(.headline)
+                    Text("\(streakCalculator.streak(sessions: sessions, today: Date())) 天")
+                        .font(.title2.weight(.semibold))
+                }
+                Spacer()
+                Image(systemName: "flame")
+                    .font(.title)
+                    .foregroundStyle(.orange)
+            }
+        }
+    }
+}
+
 private struct SettingsView: View {
     @Binding var defaultMinutes: Int
     @Binding var lockMode: String
@@ -461,7 +489,7 @@ private struct SettingsView: View {
                 SettingSection(title: "行为边界") {
                     SettingRow(
                         systemImage: "lock",
-                        title: "App 内锁定",
+                        title: "App 内遮罩",
                         detail: "系统级 Screen Time 锁机需要后续 entitlement。"
                     )
                     SettingRow(

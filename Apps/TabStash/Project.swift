@@ -7,7 +7,7 @@ let project = appProject(
         displayName: "TabStash",
         subtitle: "标签收纳",
         bundleID: "com.pocketapps.tabstash",
-        version: "1.2.0"
+        version: "1.3.0"
     ),
     testDependencies: [.package(product: "PocketTestKit")]
 )

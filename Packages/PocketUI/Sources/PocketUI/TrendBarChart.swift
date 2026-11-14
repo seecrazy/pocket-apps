@@ -53,3 +53,37 @@ public struct TrendBarChart: View {
         data.map(\.value).max() ?? 0
     }
 }
+
+public struct ProgressRing: View {
+    let progress: Double
+    let lineWidth: CGFloat
+    let title: String
+    let detail: String
+
+    public init(progress: Double, lineWidth: CGFloat = 14, title: String, detail: String) {
+        self.progress = min(max(progress, 0), 1)
+        self.lineWidth = lineWidth
+        self.title = title
+        self.detail = detail
+    }
+
+    public var body: some View {
+        ZStack {
+            Circle()
+                .stroke(Color.accentColor.opacity(0.18), lineWidth: lineWidth)
+            Circle()
+                .trim(from: 0, to: progress)
+                .stroke(Color.accentColor, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+            VStack(spacing: 4) {
+                Text(title)
+                    .font(.title.weight(.semibold))
+                    .monospacedDigit()
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+}

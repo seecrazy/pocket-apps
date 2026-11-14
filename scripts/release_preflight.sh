@@ -32,8 +32,8 @@ for app in "${apps[@]}"; do
     fi
   done
 
-  if ! grep -q 'version: "1.2.0"' "$manifest"; then
-    echo "Expected version 1.2.0 in $manifest"
+  if ! grep -q 'version: "1.3.0"' "$manifest"; then
+    echo "Expected version 1.3.0 in $manifest"
     exit 1
   fi
   echo "OK: $app"

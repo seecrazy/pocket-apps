@@ -7,7 +7,7 @@ let project = appProject(
         displayName: "SlowCard",
         subtitle: "慢递明信片",
         bundleID: "com.pocketapps.slowcard",
-        version: "1.2.0"
+        version: "1.3.0"
     ),
     testDependencies: [.package(product: "PocketTestKit")]
 )

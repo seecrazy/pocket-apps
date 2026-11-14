@@ -54,3 +54,32 @@ enum SlowCardLibrary {
         }
     }
 }
+
+struct SlowCardCountdown {
+    let text: String
+    let isDue: Bool
+}
+
+extension SlowCardLibrary {
+    static func countdown(unlockAt: Date, now: Date = Date()) -> SlowCardCountdown {
+        let interval = unlockAt.timeIntervalSince(now)
+        if interval <= 0 {
+            return SlowCardCountdown(text: "已到达", isDue: true)
+        }
+
+        let days = Int(interval / 86400)
+        let hours = Int(interval.truncatingRemainder(dividingBy: 86400) / 3600)
+        let minutes = Int(interval.truncatingRemainder(dividingBy: 3600) / 60)
+
+        if days > 0 {
+            return SlowCardCountdown(text: days == 1 ? "1 天后到达" : "\(days) 天后到达", isDue: false)
+        }
+        if hours > 0 {
+            return SlowCardCountdown(text: hours == 1 ? "1 小时后到达" : "\(hours) 小时后到达", isDue: false)
+        }
+        if minutes > 0 {
+            return SlowCardCountdown(text: minutes == 1 ? "1 分钟后到达" : "\(minutes) 分钟后到达", isDue: false)
+        }
+        return SlowCardCountdown(text: "即将到达", isDue: false)
+    }
+}

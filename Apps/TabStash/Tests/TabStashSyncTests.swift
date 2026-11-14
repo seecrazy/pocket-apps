@@ -134,3 +134,18 @@ final class TabStashSyncTests: XCTestCase {
         )
     }
 }
+
+final class TabStashLibraryTests: XCTestCase {
+    func testMarksAllUnreadTabsAsRead() {
+        let now = Date(timeIntervalSince1970: 100)
+        let tabs = [
+            StashedTabModel(title: "A", urlString: "https://a.dev", collectionID: UUID(), lastModifiedAt: now),
+            StashedTabModel(title: "B", urlString: "https://b.dev", collectionID: UUID(), lastModifiedAt: now, isRead: true),
+            StashedTabModel(title: "C", urlString: "https://c.dev", collectionID: UUID(), lastModifiedAt: now),
+        ]
+
+        XCTAssertEqual(TabStashLibrary.unread(tabs).count, 2)
+        XCTAssertEqual(TabStashLibrary.markAllRead(tabs, now: now), 2)
+        XCTAssertEqual(tabs.filter(\.isRead).count, 3)
+    }
+}

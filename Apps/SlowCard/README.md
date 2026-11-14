@@ -5,13 +5,17 @@
   <img alt="SwiftUI" src="https://img.shields.io/badge/UI-SwiftUI-32ADE6">
   <img alt="SwiftData" src="https://img.shields.io/badge/Data-SwiftData-0A84FF">
   <img alt="Status" src="https://img.shields.io/badge/release_ready_in_repo-34C759">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.2.0-8E8E93">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.3.0-8E8E93">
 </p>
 
 > 给未来的自己写一封会准时到达的信。
 
 SlowCard 不发送邮件、不分享内容、不上传卡片。它用延迟解锁把当下的想法封存起来，让用户在未来某天重新看见自己。
 
+## v1.3 成熟产品对标更新
+
+- 卡片列表显示“1 天后到达 / 2 小时后到达 / 已到达”等倒计时。
+- 卡片状态和到达时间保持在一屏内可读。
 ## 目录
 
 - [亮点](#亮点)

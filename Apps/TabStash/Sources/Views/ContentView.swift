@@ -1,3 +1,4 @@
+import PocketCore
 import PocketUI
 import SwiftData
 import SwiftUI
@@ -63,6 +64,8 @@ private struct InboxView: View {
     @State private var searchText = ""
     @State private var showsAddTab = false
     @State private var deletingTab: StashedTabModel?
+    @State private var showsCreateCollection = false
+    @State private var haptics: any HapticPerformer = SystemHaptics()
 
     var body: some View {
         ScrollView {
@@ -107,17 +110,32 @@ private struct InboxView: View {
         }
         .navigationTitle("TabStash")
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .primaryAction) {
                 Button {
                     showsAddTab = true
                 } label: {
                     Image(systemName: "plus")
                 }
                 .accessibilityLabel("手动添加标签页")
+
+                Menu {
+                    Button("新建集合") {
+                        showsCreateCollection = true
+                    }
+                    Button("全部标记已读") {
+                        markVisibleRead()
+                    }
+                    .disabled(TabStashLibrary.unread(filteredTabs).isEmpty)
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
             }
         }
         .sheet(isPresented: $showsAddTab) {
             AddTabSheet(defaultCollectionID: selectedCollectionID)
+        }
+        .sheet(isPresented: $showsCreateCollection) {
+            CreateCollectionSheet()
         }
         .confirmationDialog(
             "删除标签页？",
@@ -185,6 +203,44 @@ private struct InboxView: View {
         tab.isFavorite.toggle()
         tab.lastModifiedAt = Date()
         try? modelContext.save()
+    }
+
+    private func markVisibleRead() {
+        let changed = TabStashLibrary.markAllRead(filteredTabs)
+        guard changed > 0 else { return }
+        try? modelContext.save()
+        haptics.perform(.success)
+    }
+}
+
+private struct CreateCollectionSheet: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    @State private var name = ""
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                TextField("集合名称", text: $name)
+            }
+            .navigationTitle("新建集合")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("保存") {
+                        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !trimmed.isEmpty else { return }
+                        modelContext.insert(StashCollectionModel(name: trimmed, lastModifiedAt: Date()))
+                        try? modelContext.save()
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消") { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.medium])
     }
 }
 

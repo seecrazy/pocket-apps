@@ -11,6 +11,7 @@ final class AudioRecorderService: ObservableObject {
     @Published private(set) var currentPower: Double = AudioLevelAnalyzer.silence
     @Published private(set) var peakPower: Double = AudioLevelAnalyzer.silence
     @Published private(set) var averagePower: Double = AudioLevelAnalyzer.silence
+    @Published private(set) var recordingSeconds: Int = 0
     private(set) var lastFileURL: URL?
     private(set) var lastLevels: [Double] = []
     private(set) var recordingStartedAt: Date?
@@ -73,6 +74,7 @@ final class AudioRecorderService: ObservableObject {
             averagePower = AudioLevelAnalyzer.silence
             errorMessage = nil
             interruptionReason = nil
+            recordingSeconds = 0
             startMetering()
             return fileURL
         } catch {
@@ -122,6 +124,7 @@ final class AudioRecorderService: ObservableObject {
         recorder.updateMeters()
         let power = Double(recorder.averagePower(forChannel: 0))
         allLevels.append(power)
+        recordingSeconds = Int(max(0, recorder.currentTime))
         levels = Array(allLevels.suffix(120))
         currentPower = power
         peakPower = max(peakPower, power)

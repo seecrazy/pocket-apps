@@ -10,8 +10,10 @@ struct SafetyView: View {
     @Query(sort: \CheckInRecordModel.day, order: .reverse) private var records: [CheckInRecordModel]
     @Query(sort: \CheckInPlanModel.createdAt) private var plans: [CheckInPlanModel]
     @State private var showsAddContact = false
+    @State private var editingContact: SafetyContactModel?
     @State private var deletingContact: SafetyContactModel?
     @State private var copied = false
+    @State private var validationMessage: String?
     @State private var haptics: any HapticPerformer = SystemHaptics()
     private let calculator = StreakCalculator()
     private let library = SoloGuardLibrary()
@@ -56,7 +58,14 @@ struct SafetyView: View {
             }
         }
         .sheet(isPresented: $showsAddContact) {
-            ContactSheet()
+            ContactSheet { message in
+                validationMessage = message
+            }
+        }
+        .sheet(item: $editingContact) { contact in
+            ContactSheet(contact: contact) { message in
+                validationMessage = message
+            }
         }
         .confirmationDialog(
             "删除守护联系人？",
@@ -83,6 +92,21 @@ struct SafetyView: View {
         }
         .alert("已复制状态", isPresented: $copied) {
             Button("好", role: .cancel) {}
+        }
+        .alert(
+            "无法保存联系人",
+            isPresented: Binding(
+                get: { validationMessage != nil },
+                set: {
+                    if !$0 {
+                        validationMessage = nil
+                    }
+                }
+            )
+        ) {
+            Button("好", role: .cancel) {}
+        } message: {
+            Text(validationMessage ?? "")
         }
     }
 
@@ -193,6 +217,21 @@ struct SafetyView: View {
                             Image(systemName: "phone.fill")
                         }
                         .buttonStyle(.bordered)
+                        Button {
+                            makePrimary(contact)
+                        } label: {
+                            Image(systemName: contact.isPrimary ? "star.fill" : "star")
+                                .foregroundStyle(contact.isPrimary ? Color.yellow : Color.secondary)
+                        }
+                        .buttonStyle(.bordered)
+                        .accessibilityLabel(contact.isPrimary ? "取消主要联系人" : "设为主要联系人")
+                        Button {
+                            editingContact = contact
+                        } label: {
+                            Image(systemName: "pencil")
+                        }
+                        .buttonStyle(.bordered)
+                        .accessibilityLabel("编辑联系人")
                         Button(role: .destructive) {
                             deletingContact = contact
                         } label: {
@@ -216,6 +255,13 @@ struct SafetyView: View {
         guard let url = SoloGuardSafetyMessage.smsURL(phone: contact.phone, body: message) else { return }
         UIApplication.shared.open(url)
     }
+
+    private func makePrimary(_ contact: SafetyContactModel) {
+        contacts.forEach { $0.isPrimary = false }
+        contact.isPrimary = true
+        try? modelContext.save()
+        haptics.perform(.light)
+    }
 }
 
 private struct ContactSheet: View {
@@ -226,6 +272,19 @@ private struct ContactSheet: View {
     @State private var relationship = "守护联系人"
     @State private var notes = ""
     @State private var isPrimary = false
+    let contact: SafetyContactModel?
+
+    let onValidationFailure: (String) -> Void
+
+    init(contact: SafetyContactModel? = nil, onValidationFailure: @escaping (String) -> Void = { _ in }) {
+        self.contact = contact
+        self.onValidationFailure = onValidationFailure
+        _name = State(initialValue: contact?.name ?? "")
+        _phone = State(initialValue: contact?.phone ?? "")
+        _relationship = State(initialValue: contact?.relationship ?? "守护联系人")
+        _notes = State(initialValue: contact?.notes ?? "")
+        _isPrimary = State(initialValue: contact?.isPrimary ?? false)
+    }
 
     var body: some View {
         NavigationStack {
@@ -238,6 +297,7 @@ private struct ContactSheet: View {
                 Toggle("设为主要联系人", isOn: $isPrimary)
             }
             .navigationTitle("守护联系人")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") {
@@ -255,19 +315,32 @@ private struct ContactSheet: View {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedPhone = phone.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty, !trimmedPhone.isEmpty else { return }
-        if isPrimary {
+        let validation = SoloGuardSafetyMessage.validateContact(name: trimmedName, phone: trimmedPhone)
+        if let validation {
+            onValidationFailure(validation)
+            return
+        }
+        if isPrimary || contact == nil {
             let existing = try? modelContext.fetch(FetchDescriptor<SafetyContactModel>())
             existing?.forEach { $0.isPrimary = false }
         }
-        modelContext.insert(
-            SafetyContactModel(
-                name: trimmedName,
-                phone: trimmedPhone,
-                relationship: relationship.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "守护联系人" : relationship,
-                notes: notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : notes,
-                isPrimary: isPrimary || (try? modelContext.fetch(FetchDescriptor<SafetyContactModel>()))?.isEmpty ?? true
+        if let contact {
+            contact.name = trimmedName
+            contact.phone = trimmedPhone
+            contact.relationship = relationship.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "守护联系人" : relationship
+            contact.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : notes
+            contact.isPrimary = isPrimary
+        } else {
+            modelContext.insert(
+                SafetyContactModel(
+                    name: trimmedName,
+                    phone: trimmedPhone,
+                    relationship: relationship.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "守护联系人" : relationship,
+                    notes: notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : notes,
+                    isPrimary: isPrimary
+                )
             )
-        )
+        }
         try? modelContext.save()
         dismiss()
     }

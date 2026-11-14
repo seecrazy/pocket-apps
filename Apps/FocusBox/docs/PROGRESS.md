@@ -1,7 +1,7 @@
 # FocusBox 进度文档
 
 > 更新时间：2026-11-14
-> 当前版本：1.2.0
+> 当前版本：1.3.0
 > 当前状态：v1.2 工程内可发布
 
 ## 已完成
@@ -38,10 +38,18 @@
 - [x] 会话暂停 / 恢复状态机。
 - [x] 墙钟剩余时间计算。
 - [x] App 被回收后的 running / paused 恢复。
-- [x] 可配置 App 内锁定。
+- [x] 可配置 App 内遮罩。
+- [x] 澄清 iOS 能力边界：App 内遮罩不能阻止系统切屏。
+- [ ] Family Controls / Managed Settings 系统级 Screen Time 盾牌。
 - [x] 暂停与恢复的单元测试。
 
 **边界**：系统级 Screen Time 锁机需要 Family Controls entitlement，当前未接入。
+
+### v1.3 成熟产品对标
+
+- [x] 专注进度环。
+- [x] 连续专注天数。
+- [x] 会话暂停 / 恢复状态机。
 
 ## 当前状态
 

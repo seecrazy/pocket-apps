@@ -9,11 +9,12 @@ struct ContentView: View {
     @AppStorage("ambientlog.hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("ambientlog.preferredCategory") private var preferredCategory = AmbientRecordingCategory.nature.rawValue
     @StateObject private var recorder = AudioRecorderService()
+    @State private var showsLevelHelp = false
 
     var body: some View {
         TabView {
             NavigationStack {
-                RecordView(recorder: recorder, preferredCategory: $preferredCategory)
+                RecordView(recorder: recorder, preferredCategory: $preferredCategory, showsLevelHelp: $showsLevelHelp)
             }
             .tabItem {
                 Label("记录", systemImage: "record.circle")
@@ -27,7 +28,7 @@ struct ContentView: View {
             }
 
             NavigationStack {
-                SettingsView()
+                SettingsView(showsLevelHelp: $showsLevelHelp)
             }
             .tabItem {
                 Label("设置", systemImage: "gearshape")
@@ -37,6 +38,9 @@ struct ContentView: View {
             recorder.onInterruption = { fileURL, duration, levels in
                 saveRecording(fileURL: fileURL, duration: duration, levels: levels)
             }
+        }
+        .sheet(isPresented: $showsLevelHelp) {
+            AudioLevelHelpSheet()
         }
         .fullScreenCover(isPresented: Binding(
             get: { !hasCompletedOnboarding },
@@ -54,6 +58,7 @@ struct ContentView: View {
                     "录音只保存在 App 沙盒中。",
                     "系统中断时自动停止，保留已录内容。",
                     "分类帮助你回看雨声、咖啡店或夜晚。",
+                    "音量读数是 dBFS：0 是接近满格，负数是正常音量。",
                 ],
                 primaryTitle: "开始使用"
             ) {
@@ -84,6 +89,7 @@ private struct RecordView: View {
     @Environment(\.modelContext) private var modelContext
     @ObservedObject var recorder: AudioRecorderService
     @Binding var preferredCategory: String
+    @Binding var showsLevelHelp: Bool
     @State private var showsPermissionDenied = false
 
     var body: some View {
@@ -97,6 +103,8 @@ private struct RecordView: View {
                     currentPower: recorder.currentPower,
                     peakPower: recorder.peakPower,
                     averagePower: recorder.averagePower,
+                    recordingSeconds: recorder.recordingSeconds,
+                    onShowHelp: { showsLevelHelp = true },
                     preferredCategory: $preferredCategory,
                     onStart: startRecording,
                     onStop: stopRecording
@@ -114,6 +122,15 @@ private struct RecordView: View {
                         detail: "电话或其他音频会话会自动停止录音。"
                     )
                 }
+
+                Button {
+                    showsLevelHelp = true
+                } label: {
+                    Label("dBFS 是什么？为什么是负数？", systemImage: "questionmark.circle")
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                }
+                .buttonStyle(.bordered)
             }
             .padding(16)
         }
@@ -335,6 +352,8 @@ private struct RecorderCard: View {
     let currentPower: Double
     let peakPower: Double
     let averagePower: Double
+    let recordingSeconds: Int
+    let onShowHelp: () -> Void
     @Binding var preferredCategory: String
     let onStart: () -> Void
     let onStop: () -> Void
@@ -373,10 +392,16 @@ private struct RecorderCard: View {
 
             HStack {
                 StatusBarChip(
-                    text: String(format: "%.0f dBFS", currentPower),
+                    text: AudioLevelExplainer.levelName(for: currentPower),
                     systemImage: "waveform",
                     tint: .blue
                 )
+                Button {
+                    onShowHelp()
+                } label: {
+                    Label(String(format: "%.0f dBFS", currentPower), systemImage: "questionmark.circle")
+                }
+                .buttonStyle(.borderless)
                 StatusBarChip(
                     text: String(format: "峰值 %.0f", peakPower),
                     systemImage: "arrow.up.right",
@@ -387,6 +412,15 @@ private struct RecorderCard: View {
                     systemImage: "chart.bar.fill",
                     tint: .green
                 )
+            }
+
+            HStack {
+                Text(AudioRecordingTimer.format(seconds: recordingSeconds))
+                    .font(.title2.weight(.semibold).monospacedDigit())
+                Spacer()
+                Text(isRecording ? "录音中" : "已停止")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             PrimaryButton(
@@ -479,6 +513,8 @@ private struct RecordingCard: View {
 }
 
 private struct SettingsView: View {
+    @Binding var showsLevelHelp: Bool
+
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
@@ -502,6 +538,15 @@ private struct SettingsView: View {
                         detail: "自然、城市、居家或夜晚，之后更容易找回。"
                     )
                 }
+
+                Button {
+                    showsLevelHelp = true
+                } label: {
+                    Label("了解 dBFS 音量读数", systemImage: "info.circle")
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                }
+                .buttonStyle(.bordered)
             }
             .padding(16)
         }

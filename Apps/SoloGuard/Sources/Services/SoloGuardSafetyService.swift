@@ -39,3 +39,20 @@ enum SoloGuardSafetyMessage {
         return URL(string: "tel:\(trimmed)")
     }
 }
+
+extension SoloGuardSafetyMessage {
+    static func validateContact(name: String, phone: String) -> String? {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedPhone = phone.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedName.isEmpty {
+            return "请输入联系人姓名。"
+        }
+        if trimmedPhone.isEmpty {
+            return "请输入联系电话。"
+        }
+        if callURL(phone: trimmedPhone) == nil {
+            return "电话号码格式不正确。"
+        }
+        return nil
+    }
+}

@@ -15,7 +15,7 @@ struct FocusLockCover: View {
             Color(.systemBackground).ignoresSafeArea()
             ScrollView {
                 VStack(spacing: 20) {
-                    Text("FocusBox Lock")
+                    Text("FocusBox Overlay")
                         .font(.title.weight(.bold))
                     ActiveSessionCard(
                         plannedMinutes: plannedMinutes,
@@ -26,7 +26,12 @@ struct FocusLockCover: View {
                         onTogglePause: onTogglePause,
                         onAbandon: onAbandon
                     )
-                    Text("这是 App 内锁定，不是系统级 Screen Time 锁机。")
+                    if let intention {
+                        Text(intention)
+                            .font(.headline)
+                            .multilineTextAlignment(.center)
+                    }
+                    Text("这是 App 内遮罩，不是系统级 Screen Time 盾牌。")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)

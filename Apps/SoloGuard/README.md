@@ -5,14 +5,14 @@
   <img alt="SwiftUI" src="https://img.shields.io/badge/UI-SwiftUI-32ADE6">
   <img alt="SwiftData" src="https://img.shields.io/badge/Data-SwiftData-0A84FF">
   <img alt="Status" src="https://img.shields.io/badge/release_ready_in_repo-34C759">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.2.0-8E8E93">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.3.0-8E8E93">
 </p>
 
 > 为独居生活建立轻量的日常确认习惯。
 
 SoloGuard 不做紧急联系人外发，也不上传生活状态。它把“今天正常吗”变成一个低压力、可回看的本地仪式，帮助独居用户观察自己的日常节奏。
 
-## v1.2 更新
+## v1.3 更新
 
 - 新增守护联系人：本机保存姓名、电话、关系与备注。
 - 新增安全状态卡：汇总最近确认、连续状态和需要查看提示。
@@ -20,6 +20,11 @@ SoloGuard 不做紧急联系人外发，也不上传生活状态。它把“今�
 - 新增最近 14 天签到趋势。
 - 支持编辑计划并重新调度提醒。
 
+## v1.3 成熟产品对标更新
+
+- 守护联系人支持编辑、删除确认和主联系人快速切换。
+- 主联系人自动驱动快速呼叫、短信入口和安全状态卡。
+- 联系人字段提供校验与错误提示。
 ## 目录
 
 - [亮点](#亮点)

@@ -126,9 +126,11 @@ private struct SlowCardView: View {
                         systemImage: card.status() == .received ? "envelope.open.fill" : "paperplane.fill",
                         tint: card.status() == .received ? .green : .blue
                     )
-                    Text("到达时间 \(card.unlockAt.formatted(date: .long, time: .omitted))")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    Text(
+                        "到达时间 \(card.unlockAt.formatted(date: .long, time: .omitted)) · \(SlowCardLibrary.countdown(unlockAt: card.unlockAt).text)"
+                    )
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
                 }
                 Spacer()
                 HStack(spacing: 8) {

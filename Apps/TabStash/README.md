@@ -5,13 +5,18 @@
   <img alt="SwiftUI" src="https://img.shields.io/badge/UI-SwiftUI-32ADE6">
   <img alt="SwiftData" src="https://img.shields.io/badge/Data-SwiftData-0A84FF">
   <img alt="Status" src="https://img.shields.io/badge/release_ready_in_repo-34C759">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.2.0-8E8E93">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.3.0-8E8E93">
 </p>
 
 > 把桌面浏览器保存的标签页带到 iPhone 继续处理。
 
 TabStash iOS 使用 `PocketTabStash.v1` JSON 在浏览器插件与 iOS 之间显式交换数据。它不上传数据、不读取浏览器内容，只负责导入、整理和继续阅读。
 
+## v1.3 成熟产品对标更新
+
+- 支持新建集合。
+- 当前过滤结果内的未读标签页可一键全部标记已读。
+- 操作只影响当前列表，避免误改全部数据。
 ## 目录
 
 - [亮点](#亮点)

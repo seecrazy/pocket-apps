@@ -33,13 +33,13 @@
 
 ## 产品
 
-| App | 副标题 | v1.2 能力 | Bundle ID | 版本 |
+| App | 副标题 | v1.3 能力 | Bundle ID | 版本 |
 |---|---|---|---|---|
-| SoloGuard | 独居守护 | 守护联系人、安全状态卡、签到趋势、计划编辑 | `com.pocketapps.sologuard` | `1.2.0` |
-| FocusBox | 专注盒子 | 专注意图、暂停恢复、App 内锁定、7 天统计 | `com.pocketapps.focusbox` | `1.2.0` |
-| SlowCard | 慢递明信片 | 延迟解锁卡片、到达提醒、收藏、归档、写作提示 | `com.pocketapps.slowcard` | `1.2.0` |
-| AmbientLog | 环境音记录仪 | 后台录音、dBFS 音量统计、波形、文件导出 | `com.pocketapps.ambientlog` | `1.2.0` |
-| TabStash iOS | 标签收纳 | JSON 导入/导出、未读/收藏、手动添加、搜索 | `com.pocketapps.tabstash` | `1.2.0` |
+| SoloGuard | 独居守护 | 守护联系人编辑、主联系人管理、安全状态卡、签到趋势 | `com.pocketapps.sologuard` | `1.3.0` |
+| FocusBox | 专注盒子 | 专注意图、暂停恢复、进度环、连续专注天数 | `com.pocketapps.focusbox` | `1.3.0` |
+| SlowCard | 慢递明信片 | 延迟解锁卡片、到达倒计时、收藏、归档、写作提示 | `com.pocketapps.slowcard` | `1.3.0` |
+| AmbientLog | 环境音记录仪 | 后台录音、实时计时、dBFS 波形、文件导出 | `com.pocketapps.ambientlog` | `1.3.0` |
+| TabStash iOS | 标签收纳 | JSON 导入/导出、集合管理、批量已读、搜索 | `com.pocketapps.tabstash` | `1.3.0` |
 
 每个 App 都有独立的 README、设计文档和进度文档：
 
@@ -286,15 +286,15 @@ IOS_SIMULATOR_NAME="iPhone 17" ./scripts/test_apps.sh
 AppMetadata(
     name: "SoloGuard",
     bundleID: "com.pocketapps.sologuard",
-    version: "1.2.0"
+    version: "1.3.0"
 )
 ```
 
 Tag 必须与 manifest 版本一致：
 
 ```bash
-git tag SoloGuard@1.2.0
-git push origin SoloGuard@1.2.0
+git tag SoloGuard@1.3.0
+git push origin SoloGuard@1.3.0
 ```
 
 `release.yml` 会：

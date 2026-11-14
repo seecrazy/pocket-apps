@@ -27,3 +27,12 @@ final class SoloGuardSafetyServiceTests: XCTestCase {
         XCTAssertNotNil(sms)
     }
 }
+
+final class SoloGuardSafetyContactValidationTests: XCTestCase {
+    func testValidatesContactFields() {
+        XCTAssertEqual(SoloGuardSafetyMessage.validateContact(name: "", phone: "+8613800138000"), "请输入联系人姓名。")
+        XCTAssertEqual(SoloGuardSafetyMessage.validateContact(name: "Mum", phone: ""), "请输入联系电话。")
+        XCTAssertEqual(SoloGuardSafetyMessage.validateContact(name: "Mum", phone: "bad"), "电话号码格式不正确。")
+        XCTAssertNil(SoloGuardSafetyMessage.validateContact(name: "Mum", phone: "+8613800138000"))
+    }
+}

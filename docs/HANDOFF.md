@@ -61,6 +61,6 @@ cd /Users/xiaoyyu/IdeaProjects/pocket-apps
 
 第四轮开始对标成熟产品：SoloGuard 对标 Reminders/Streaks，FocusBox 对标 Forest/Session，SlowCard 对标 FutureMe，AmbientLog 对标 Voice Memos，TabStash 对标 Pocket/Instapaper。
 
-At Ease（心安）v0.1 MVP 已加入：引导页、情绪签到、推荐呼吸、计时器、SwiftData 本地进度、设置页、隐私清单、App Icon、fastlane metadata 与测试。Core Haptics 精确同步、HealthKit、Live Activity、内容库和订阅是下一阶段。
+At Ease（心安）已加入并推进到 v0.3：引导页、情绪签到、推荐呼吸、计时器、SwiftData 本地进度、设置页、Core Haptics、HealthKit 写入、Live Activity Widget、念头放下、触摸身体扫描、环境音混音、隐私清单、App Icon、fastlane metadata 与测试。
 
 At Ease v0.1.1 已补充可选声音引导：呼吸阶段语音、计时开始 / 结束语音、呼吸与计时页一键静音，以及设置页声音开关；仍保留视觉与触觉完整可用。

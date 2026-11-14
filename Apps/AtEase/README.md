@@ -61,8 +61,8 @@ open PocketApps.xcworkspace
   - Box Breathing
   - 1 分钟 SOS
 - 呼吸视觉：近纯黑背景、圆环扩张收缩、阶段文字。
-- 触觉辅助：阶段切换轻触感；设置可关闭。
-- 自由计时器：1–60 分钟。
+- 触觉辅助：Core Haptics 阶段模式；设置可关闭。
+- 自由计时器：1–60 分钟，可叠加雨声、流水、虫鸣。
 - 本地 SwiftData 记录：情绪签到、练习分钟数。
 - 进度页：本周分钟数、近 35 天热力图、连续天数。
 - 设置：触觉开关、首页默认时长、订阅状态占位。
@@ -132,13 +132,13 @@ IOS_SIMULATOR_NAME="iPhone 17" ./scripts/test_apps.sh
 ## Roadmap
 
 ### v0.2
-- Core Haptics 与呼吸节奏精确同步。
+- Core Haptics 与呼吸节奏同步。
 - HealthKit 正念分钟写入。
 - Live Activity 锁屏呼吸节奏。
 
 ### v0.3
 - 念头放下交互。
-- 触摸身体扫描探索。
+- 触摸身体扫描。
 - 环境音混音。
 
 ### v0.4

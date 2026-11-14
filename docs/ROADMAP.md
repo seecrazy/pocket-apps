@@ -154,11 +154,9 @@
 
 ### At Ease
 
-- [x] v0.1 MVP：呼吸、计时器、情绪签到、本地进度。
-- [ ] Core Haptics 与呼吸节奏精确同步。
-- [ ] HealthKit 正念分钟写入。
-- [ ] Live Activity 锁屏呼吸节奏。
-- [ ] 念头放下交互。
+- [x] v0.3：呼吸、计时器、情绪签到、本地进度、Core Haptics、HealthKit、Live Activity。
+- [ ] Core Haptics 真机精度验证。
+- [ ] HealthKit 授权状态与失败 UI。
 - [ ] 引导冥想与订阅内容。
 
 ### TabStash

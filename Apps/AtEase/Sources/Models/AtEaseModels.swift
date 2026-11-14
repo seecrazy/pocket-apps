@@ -46,6 +46,7 @@ enum AtEasePracticeKind: String, CaseIterable, Identifiable {
     case sos
     case guided
     case thoughtDistancing
+    case bodyScan
 
     var id: String {
         rawValue
@@ -58,6 +59,7 @@ enum AtEasePracticeKind: String, CaseIterable, Identifiable {
         case .sos: return "1 分钟 SOS"
         case .guided: return "引导冥想"
         case .thoughtDistancing: return "念头放下"
+        case .bodyScan: return "触摸身体扫描"
         }
     }
 }

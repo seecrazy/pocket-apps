@@ -8,11 +8,13 @@ struct AtEaseBreathView: View {
     @Environment(\.modelContext) private var modelContext
     @StateObject private var engine: BreathingEngine
     @StateObject private var audioGuide = AtEaseAudioGuide()
+    @StateObject private var coreHaptics = CoreHapticsBreathGuide()
+    @StateObject private var liveActivity = SystemBreathLiveActivityService()
+    @State private var healthWriter = HealthKitMindfulMinutesWriter()
     @State private var startedAt = Date()
     @State private var showsExitConfirmation = false
     @State private var hapticsEnabled = UserDefaults.standard.bool(forKey: "atease.hapticsEnabled")
     @AppStorage("atease.voiceGuidanceEnabled") private var voiceGuidanceEnabled = true
-    private let hapticPlayer = SystemAtEaseHapticPlayer()
     let practiceKind: AtEasePracticeKind
     let moodLevel: Int?
 
@@ -95,20 +97,49 @@ struct AtEaseBreathView: View {
         .onAppear {
             engine.hapticsEnabled = hapticsEnabled
             engine.start()
+            if hapticsEnabled {
+                coreHaptics.prepare()
+                coreHaptics.play(phase: engine.phase)
+            }
             if voiceGuidanceEnabled {
                 audioGuide.phase(engine.phase)
+            }
+            if liveActivity.canStart() {
+                liveActivity.start(
+                    patternTitle: practiceKind.title,
+                    phaseTitle: engine.phase.title,
+                    progress: engine.progress,
+                    remainingSeconds: engine.phaseRemaining
+                )
             }
         }
         .onDisappear {
             engine.stop()
+            liveActivity.end(elapsedSeconds: engine.elapsedSeconds)
         }
         .onChange(of: engine.phase) { _, phase in
             if hapticsEnabled {
-                hapticPlayer.phaseChange()
+                coreHaptics.play(phase: phase)
+            } else {
+                coreHaptics.stop()
             }
             if voiceGuidanceEnabled {
                 audioGuide.phase(phase)
             }
+            liveActivity.update(
+                phaseTitle: phase.title,
+                progress: engine.progress,
+                remainingSeconds: engine.phaseRemaining,
+                isPaused: engine.isPaused
+            )
+        }
+        .onChange(of: engine.isPaused) { _, isPaused in
+            liveActivity.update(
+                phaseTitle: engine.phase.title,
+                progress: engine.progress,
+                remainingSeconds: engine.phaseRemaining,
+                isPaused: isPaused
+            )
         }
         .confirmationDialog(
             "结束本次呼吸？",
@@ -126,16 +157,20 @@ struct AtEaseBreathView: View {
     }
 
     private func saveSession() {
+        let endedAt = Date()
         let seconds = max(1, engine.elapsedSeconds)
         let session = PracticeSessionModel(
             kind: practiceKind,
             startedAt: startedAt,
-            endedAt: Date(),
+            endedAt: endedAt,
             mindfulSeconds: seconds,
             moodLevel: moodLevel
         )
         modelContext.insert(session)
         try? modelContext.save()
+        Task {
+            _ = await healthWriter.save(seconds: Double(seconds), startedAt: startedAt, endedAt: endedAt)
+        }
     }
 }
 

@@ -7,6 +7,8 @@ struct AtEaseTimerView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @StateObject private var audioGuide = AtEaseAudioGuide()
+    @StateObject private var ambientMixer = AmbientSoundMixer()
+    @State private var healthWriter = HealthKitMindfulMinutesWriter()
     @AppStorage("atease.voiceGuidanceEnabled") private var voiceGuidanceEnabled = true
     @State private var minutes: Int
     @State private var remainingSeconds: Int
@@ -71,6 +73,9 @@ struct AtEaseTimerView: View {
                     .padding(.horizontal, 40)
                 }
 
+                AmbientSoundCard(mixer: ambientMixer)
+                    .padding(.horizontal, 24)
+
                 Spacer()
 
                 PrimaryButton(isRunning ? "暂停" : "开始") {
@@ -83,6 +88,7 @@ struct AtEaseTimerView: View {
         .preferredColorScheme(.dark)
         .onDisappear {
             timer?.invalidate()
+            ambientMixer.stop()
         }
     }
 
@@ -123,15 +129,19 @@ struct AtEaseTimerView: View {
     }
 
     private func saveSession() {
+        let endedAt = Date()
         let elapsed = max(1, minutes * 60 - remainingSeconds)
         let session = PracticeSessionModel(
             kind: .timer,
             startedAt: startedAt,
-            endedAt: Date(),
+            endedAt: endedAt,
             mindfulSeconds: elapsed,
             moodLevel: moodLevel
         )
         modelContext.insert(session)
         try? modelContext.save()
+        Task {
+            _ = await healthWriter.save(seconds: Double(elapsed), startedAt: startedAt, endedAt: endedAt)
+        }
     }
 }

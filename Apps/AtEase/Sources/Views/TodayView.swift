@@ -158,8 +158,12 @@ struct TodayView: View {
             )
         case .timer:
             AtEaseTimerView(minutes: recommendation.minutes, moodLevel: selectedMood)
-        case .guided, .thoughtDistancing:
+        case .guided:
             AtEasePlaceholderView(title: recommendation.title, message: "这个练习正在准备中。当前版本先从呼吸开始。")
+        case .thoughtDistancing:
+            AtEaseThoughtDistancingView()
+        case .bodyScan:
+            AtEaseBodyScanView()
         }
     }
 }

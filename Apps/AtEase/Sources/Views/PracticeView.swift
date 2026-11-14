@@ -93,9 +93,54 @@ struct PracticeView: View {
                 .font(.title2.weight(.light))
                 .foregroundStyle(AtEaseDesignTokens.textPrimary)
 
+            NavigationLink {
+                AtEaseThoughtDistancingView()
+            } label: {
+                CardContainer {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("念头放下")
+                                .font(.headline.weight(.medium))
+                                .foregroundStyle(AtEaseDesignTokens.textPrimary)
+                            Text("把占据注意力的一句话轻轻放下。")
+                                .font(.footnote)
+                                .foregroundStyle(AtEaseDesignTokens.textSecondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.footnote)
+                            .foregroundStyle(AtEaseDesignTokens.textSecondary.opacity(0.4))
+                    }
+                }
+                .background(Color.white.opacity(0.55), in: .rect(cornerRadius: 16))
+            }
+            .buttonStyle(.plain)
+
+            NavigationLink {
+                AtEaseBodyScanView()
+            } label: {
+                CardContainer {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("触摸身体扫描")
+                                .font(.headline.weight(.medium))
+                                .foregroundStyle(AtEaseDesignTokens.textPrimary)
+                            Text("沿身体轮廓移动手指，无引导语。")
+                                .font(.footnote)
+                                .foregroundStyle(AtEaseDesignTokens.textSecondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.footnote)
+                            .foregroundStyle(AtEaseDesignTokens.textSecondary.opacity(0.4))
+                    }
+                }
+                .background(Color.white.opacity(0.55), in: .rect(cornerRadius: 16))
+            }
+            .buttonStyle(.plain)
+
             CardContainer {
                 SettingRow(systemImage: "waveform", title: "引导冥想", detail: "精选中文导师内容，后续开放")
-                SettingRow(systemImage: "hand.tap", title: "念头放下", detail: "轻触交互，即将进入测试")
                 SettingRow(systemImage: "moon.stars", title: "睡眠故事", detail: "订阅内容，暂未开放")
             }
             .background(Color.white.opacity(0.35), in: .rect(cornerRadius: 16))

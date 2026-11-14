@@ -16,6 +16,7 @@
 - [x] Release workflow：按 `<App>@<version>` tag 独立发布。
 - [x] fastlane lane：五个 App 的 beta / release。
 - [x] fastlane metadata 文案骨架。
+- [x] 五个 App 独立 README / 设计文档 / 进度文档。
 
 ### SoloGuard
 

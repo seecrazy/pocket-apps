@@ -19,6 +19,7 @@
 - 五个 App 增加首启说明、设置页和更贴近真实场景的流程。
 - PocketUI 新增 OnboardingPage 与 SettingSection。
 - 新增 SF Symbol 存在性测试，修复无效图标与空图标问题。
+- 五个 App 均有独立 README、`docs/DESIGN.md` 与 `docs/PROGRESS.md`。
 
 ## 当前可验证状态
 

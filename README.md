@@ -41,6 +41,16 @@
 | AmbientLog | 环境音记录仪 | 本机录音、分类、搜索、中断保护、播放管理 | `com.pocketapps.ambientlog` | `1.1.0` |
 | TabStash iOS | 标签收纳 | JSON 导入/导出、未读/收藏、手动添加、搜索 | `com.pocketapps.tabstash` | `1.1.0` |
 
+每个 App 都有独立的 README、设计文档和进度文档：
+
+| App | README | 设计 | 进度 |
+|---|---|---|---|
+| SoloGuard | [README](Apps/SoloGuard/README.md) | [DESIGN](Apps/SoloGuard/docs/DESIGN.md) | [PROGRESS](Apps/SoloGuard/docs/PROGRESS.md) |
+| FocusBox | [README](Apps/FocusBox/README.md) | [DESIGN](Apps/FocusBox/docs/DESIGN.md) | [PROGRESS](Apps/FocusBox/docs/PROGRESS.md) |
+| SlowCard | [README](Apps/SlowCard/README.md) | [DESIGN](Apps/SlowCard/docs/DESIGN.md) | [PROGRESS](Apps/SlowCard/docs/PROGRESS.md) |
+| AmbientLog | [README](Apps/AmbientLog/README.md) | [DESIGN](Apps/AmbientLog/docs/DESIGN.md) | [PROGRESS](Apps/AmbientLog/docs/PROGRESS.md) |
+| TabStash iOS | [README](Apps/TabStash/README.md) | [DESIGN](Apps/TabStash/docs/DESIGN.md) | [PROGRESS](Apps/TabStash/docs/PROGRESS.md) |
+
 TabStash 当前使用本地 JSON 文件作为插件与 iOS 之间的数据交换层；iCloud 容器尚未启用。
 
 ## 发布状态

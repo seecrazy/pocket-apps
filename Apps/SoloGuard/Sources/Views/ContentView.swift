@@ -4,97 +4,154 @@ import SwiftData
 import SwiftUI
 
 struct ContentView: View {
+    @AppStorage("sologuard.hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var scheduler: any NotificationScheduling = SystemNotificationScheduler()
+    @State private var haptics: any HapticPerformer = SystemHaptics()
+
+    var body: some View {
+        TabView {
+            NavigationStack {
+                HomeView(scheduler: scheduler, haptics: haptics)
+            }
+            .tabItem {
+                Label("今日", systemImage: "house")
+            }
+
+            NavigationStack {
+                HistoryView()
+            }
+            .tabItem {
+                Label("历史", systemImage: "calendar")
+            }
+
+            NavigationStack {
+                SettingsView()
+            }
+            .tabItem {
+                Label("设置", systemImage: "gearshape")
+            }
+        }
+        .fullScreenCover(isPresented: Binding(
+            get: { !hasCompletedOnboarding },
+            set: {
+                if !$0 {
+                    hasCompletedOnboarding = true
+                }
+            }
+        )) {
+            OnboardingPage(
+                systemImage: "house.fill",
+                title: "私密的日常确认",
+                message: "SoloGuard 不做紧急联系人外发，也不上传你的生活状态。",
+                bullets: [
+                    "计划与签到只保存在这台 iPhone 上。",
+                    "可以选择每日提醒，但仍可手动签到。",
+                    "连续记录帮助你观察自己的日常节奏。",
+                ],
+                primaryTitle: "开始使用"
+            ) {
+                hasCompletedOnboarding = true
+            }
+        }
+    }
+}
+
+private struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \CheckInPlanModel.createdAt) private var plans: [CheckInPlanModel]
     @Query private var records: [CheckInRecordModel]
     @State private var showsCreatePlan = false
-    @State private var scheduler: any NotificationScheduling = SystemNotificationScheduler()
     @State private var deletingPlan: CheckInPlanModel?
-
+    private let scheduler: any NotificationScheduling
+    private let haptics: any HapticPerformer
     private let calculator = StreakCalculator()
     private let library = SoloGuardLibrary()
 
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    CardContainer {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("今日状态")
-                                    .font(.headline)
-                                Text(plans.isEmpty ? "还没有生活确认计划" : "确认今天的正常生活")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Image(systemName: "house.fill")
-                                .font(.title)
-                                .foregroundStyle(.tint)
-                        }
-                    }
+    init(scheduler: any NotificationScheduling, haptics: any HapticPerformer) {
+        self.scheduler = scheduler
+        self.haptics = haptics
+    }
 
-                    if plans.isEmpty {
-                        EmptyStateView(
-                            systemImage: "calendar.badge.checkmark",
-                            title: "创建第一个确认计划",
-                            message: "从每天一次的简单确认开始，记录你今天一切正常。"
-                        )
-                    } else {
-                        LazyVStack(spacing: 12) {
-                            ForEach(plans) { plan in
-                                PlanCard(
-                                    plan: plan,
-                                    todayIsCompleted: library.isCompleted(plan: plan, records: records, day: Date()),
-                                    yesterdayIsMissed: library.missedPreviousDay(plan: plan, records: records, today: Date()),
-                                    streak: calculator.streak(for: plan.id, records: records, today: Date()),
-                                    onToggle: { toggle(plan) },
-                                    onCheckIn: { checkIn(plan) },
-                                    onDelete: { deletingPlan = plan }
-                                )
-                            }
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                CardContainer {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("今日状态")
+                                .font(.headline)
+                            Text(plans.isEmpty ? "还没有生活确认计划" : "确认今天的正常生活")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "house.fill")
+                            .font(.title)
+                            .foregroundStyle(.tint)
+                    }
+                }
+
+                if plans.isEmpty {
+                    EmptyStateView(
+                        systemImage: "calendar.badge.checkmark",
+                        title: "创建第一个确认计划",
+                        message: "从每天一次的简单确认开始，记录你今天一切正常。"
+                    )
+                } else {
+                    LazyVStack(spacing: 12) {
+                        ForEach(plans) { plan in
+                            PlanCard(
+                                plan: plan,
+                                todayIsCompleted: library.isCompleted(plan: plan, records: records, day: Date()),
+                                yesterdayIsMissed: library.missedPreviousDay(plan: plan, records: records, today: Date()),
+                                streak: calculator.streak(for: plan.id, records: records, today: Date()),
+                                onToggle: { toggle(plan) },
+                                onCheckIn: { checkIn(plan) },
+                                onDelete: { deletingPlan = plan }
+                            )
                         }
                     }
                 }
-                .padding(16)
             }
-            .navigationTitle("SoloGuard")
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showsCreatePlan = true
-                    } label: {
-                        Image(systemName: "plus")
+            .padding(16)
+        }
+        .navigationTitle("SoloGuard")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showsCreatePlan = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .accessibilityLabel("新建计划")
+            }
+        }
+        .sheet(isPresented: $showsCreatePlan) {
+            CreatePlanSheet(scheduler: scheduler)
+        }
+        .confirmationDialog(
+            "删除计划？",
+            isPresented: Binding(
+                get: { deletingPlan != nil },
+                set: {
+                    if !$0 {
+                        deletingPlan = nil
                     }
                 }
-            }
-            .sheet(isPresented: $showsCreatePlan) {
-                CreatePlanSheet(scheduler: scheduler)
-            }
-            .confirmationDialog(
-                "删除计划？",
-                isPresented: Binding(
-                    get: { deletingPlan != nil },
-                    set: {
-                        if !$0 {
-                            deletingPlan = nil
-                        }
-                    }
-                ),
-                titleVisibility: .visible
-            ) {
-                Button("删除计划和签到记录", role: .destructive) {
-                    if let plan = deletingPlan {
-                        delete(plan)
-                    }
-                    deletingPlan = nil
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("删除计划和签到记录", role: .destructive) {
+                if let plan = deletingPlan {
+                    delete(plan)
                 }
-                Button("取消", role: .cancel) {
-                    deletingPlan = nil
-                }
-            } message: {
-                Text("该操作会同时取消本地提醒，且无法恢复。")
+                deletingPlan = nil
             }
+            Button("取消", role: .cancel) {
+                deletingPlan = nil
+            }
+        } message: {
+            Text("该操作会同时取消本地提醒，且无法恢复。")
         }
     }
 
@@ -105,6 +162,7 @@ struct ContentView: View {
         }
         record?.completedAt = Date()
         try? modelContext.save()
+        haptics.perform(.success)
     }
 
     private func toggle(_ plan: CheckInPlanModel) {
@@ -135,6 +193,96 @@ struct ContentView: View {
         records.filter { $0.planID == planID }.forEach(modelContext.delete)
         modelContext.delete(plan)
         try? modelContext.save()
+    }
+}
+
+private struct HistoryView: View {
+    @Query(sort: \CheckInRecordModel.day, order: .reverse) private var records: [CheckInRecordModel]
+    @Query(sort: \CheckInPlanModel.createdAt) private var plans: [CheckInPlanModel]
+
+    var body: some View {
+        ScrollView {
+            LazyVStack(spacing: 12) {
+                if records.isEmpty {
+                    EmptyStateView(
+                        systemImage: "calendar.day.timeline.left",
+                        title: "还没有签到历史",
+                        message: "每次确认都会记录在这里，方便回看节奏。"
+                    )
+                } else {
+                    ForEach(Array(records.prefix(60))) { record in
+                        HistoryRow(record: record, planTitle: planTitle(for: record.planID))
+                    }
+                }
+            }
+            .padding(16)
+        }
+        .navigationTitle("签到历史")
+    }
+
+    private func planTitle(for planID: UUID) -> String {
+        plans.first { $0.id == planID }?.title ?? "已删除计划"
+    }
+}
+
+private struct HistoryRow: View {
+    let record: CheckInRecordModel
+    let planTitle: String
+
+    var body: some View {
+        CardContainer {
+            HStack {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(planTitle)
+                        .font(.headline)
+                    Text(record.day.formatted(date: .abbreviated, time: .omitted))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                StatusBarChip(
+                    text: record.completedAt == nil ? "未完成" : "已确认",
+                    systemImage: record.completedAt == nil ? "xmark.circle" : "checkmark.circle.fill",
+                    tint: record.completedAt == nil ? .orange : .green
+                )
+            }
+        }
+    }
+}
+
+private struct SettingsView: View {
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                SettingSection(title: "数据与隐私") {
+                    SettingRow(
+                        systemImage: "iphone.and.arrow.down",
+                        title: "仅本机存储",
+                        detail: "计划与签到记录保存在 App 沙盒中。"
+                    )
+                    SettingRow(
+                        systemImage: "eye.slash",
+                        title: "不自动外发",
+                        detail: "v1 不联系紧急联系人，也不上传状态。"
+                    )
+                }
+
+                SettingSection(title: "使用建议") {
+                    SettingRow(
+                        systemImage: "bell",
+                        title: "提醒不是安全承诺",
+                        detail: "它只是帮助你建立确认习惯的轻量仪式。"
+                    )
+                    SettingRow(
+                        systemImage: "calendar.badge.clock",
+                        title: "观察连续记录",
+                        detail: "连续计数用于理解节奏，不用于制造焦虑。"
+                    )
+                }
+            }
+            .padding(16)
+        }
+        .navigationTitle("设置")
     }
 }
 

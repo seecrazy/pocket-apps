@@ -21,4 +21,9 @@ final class SlowCardLibraryTests: XCTestCase {
         XCTAssertEqual(SlowCardLibrary.filtered(cards, by: .favorite, now: now), [favorite])
         XCTAssertEqual(SlowCardLibrary.filtered(cards, by: .archive, now: now), [received])
     }
+
+    func testPromptsAreAvailable() {
+        XCTAssertFalse(SlowCardPrompts.titles.isEmpty)
+        XCTAssertTrue(SlowCardPrompts.titles.allSatisfy { !$0.isEmpty })
+    }
 }

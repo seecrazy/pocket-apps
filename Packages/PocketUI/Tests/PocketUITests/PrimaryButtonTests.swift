@@ -14,6 +14,20 @@ final class PrimaryButtonTests: XCTestCase {
         XCTAssertNotNil(CardContainer { Text("内容") })
         XCTAssertNotNil(ArchiveRow(title: "归档", detail: "说明") { Text("内容") })
         XCTAssertNotNil(
+            OnboardingPage(
+                systemImage: "house",
+                title: "标题",
+                message: "说明",
+                bullets: ["要点"],
+                primaryTitle: "开始"
+            ) {}
+        )
+        XCTAssertNotNil(
+            SettingSection(title: "设置") {
+                Text("内容")
+            }
+        )
+        XCTAssertNotNil(
             TrendBarChart(
                 title: "趋势",
                 unit: "分钟",

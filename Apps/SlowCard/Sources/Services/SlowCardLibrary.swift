@@ -6,6 +6,15 @@ enum SlowCardNotifications {
     }
 }
 
+enum SlowCardPrompts {
+    static let titles = [
+        "给三个月后的我",
+        "今天我想记住的事",
+        "最近让我开心的小事",
+        "我想对未来的自己说的话",
+    ]
+}
+
 enum SlowCardFilter: String, CaseIterable, Identifiable {
     case all
     case traveling

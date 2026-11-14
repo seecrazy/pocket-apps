@@ -20,10 +20,16 @@ public struct PrimaryButton: View {
 
     public var body: some View {
         Button(role: role, action: action) {
-            Label(title, systemImage: systemImage ?? "")
-                .font(.headline.weight(.semibold))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+            Group {
+                if let systemImage {
+                    Label(title, systemImage: systemImage)
+                } else {
+                    Text(title)
+                }
+            }
+            .font(.headline.weight(.semibold))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
         }
         .buttonStyle(.borderedProminent)
     }

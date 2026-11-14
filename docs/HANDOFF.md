@@ -16,6 +16,9 @@
 - 五个 App 升至 `1.1.0`，补齐隐私清单和发布级 UI 边界。
 - README 重写为开源仓库结构，并补充 iPhone 14 真机部署说明。
 - Tuist 支持通过本地 `Tuist/Signing.xcconfig` 注入 `DEVELOPMENT_TEAM`。
+- 五个 App 增加首启说明、设置页和更贴近真实场景的流程。
+- PocketUI 新增 OnboardingPage 与 SettingSection。
+- 新增 SF Symbol 存在性测试，修复无效图标与空图标问题。
 
 ## 当前可验证状态
 

@@ -35,11 +35,11 @@
 
 | App | 副标题 | v1.1 能力 | Bundle ID | 版本 |
 |---|---|---|---|---|
-| SoloGuard | 独居守护 | 本地生活确认计划、每日提醒、昨日异常提示、连续签到 | `com.pocketapps.sologuard` | `1.1.0` |
-| FocusBox | 专注盒子 | 专注计时、完成/放弃、重启恢复、今日与最近 7 天统计 | `com.pocketapps.focusbox` | `1.1.0` |
-| SlowCard | 慢递明信片 | 延迟解锁卡片、到达提醒、收藏、归档 | `com.pocketapps.slowcard` | `1.1.0` |
-| AmbientLog | 环境音记录仪 | 本机录音、中断保护、播放、搜索、重命名、删除 | `com.pocketapps.ambientlog` | `1.1.0` |
-| TabStash iOS | 标签收纳 | `PocketTabStash.v1` JSON 导入/导出、未读/收藏管理 | `com.pocketapps.tabstash` | `1.1.0` |
+| SoloGuard | 独居守护 | 本地生活确认计划、每日提醒、昨日异常提示、签到历史 | `com.pocketapps.sologuard` | `1.1.0` |
+| FocusBox | 专注盒子 | 专注意图、自定义时长、重启恢复、7 天统计 | `com.pocketapps.focusbox` | `1.1.0` |
+| SlowCard | 慢递明信片 | 延迟解锁卡片、到达提醒、收藏、归档、写作提示 | `com.pocketapps.slowcard` | `1.1.0` |
+| AmbientLog | 环境音记录仪 | 本机录音、分类、搜索、中断保护、播放管理 | `com.pocketapps.ambientlog` | `1.1.0` |
+| TabStash iOS | 标签收纳 | JSON 导入/导出、未读/收藏、手动添加、搜索 | `com.pocketapps.tabstash` | `1.1.0` |
 
 TabStash 当前使用本地 JSON 文件作为插件与 iOS 之间的数据交换层；iCloud 容器尚未启用。
 
@@ -55,6 +55,7 @@ TabStash 当前使用本地 JSON 文件作为插件与 iOS 之间的数据交换
 - `ITSAppUsesNonExemptEncryption=false`。
 - AmbientLog 声明了 `NSMicrophoneUsageDescription`。
 - fastlane metadata 包含五个 App 的 App Store 文案骨架。
+- 五个 App 有一次性首启说明和设置页。
 
 实际提交 App Store 还需要 Apple 开发者账号、签名证书、App Store Connect API Key、截图和隐私问卷。
 

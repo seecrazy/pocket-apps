@@ -1,1 +1,1 @@
-新增 PocketTabStash.v1 JSON 导入导出。
+新增手动添加标签页、搜索与同步页。

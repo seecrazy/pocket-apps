@@ -1,54 +1,116 @@
+import PocketCore
 import PocketUI
 import SwiftData
 import SwiftUI
 
 struct ContentView: View {
+    @AppStorage("focusbox.hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @AppStorage("focusbox.defaultMinutes") private var defaultMinutes = 25
+    @State private var haptics: any HapticPerformer = SystemHaptics()
+
+    var body: some View {
+        TabView {
+            NavigationStack {
+                FocusView(haptics: haptics, defaultMinutes: defaultMinutes)
+            }
+            .tabItem {
+                Label("专注", systemImage: "timer")
+            }
+
+            NavigationStack {
+                StatsView()
+            }
+            .tabItem {
+                Label("统计", systemImage: "chart.bar.xaxis")
+            }
+
+            NavigationStack {
+                SettingsView(defaultMinutes: $defaultMinutes)
+            }
+            .tabItem {
+                Label("设置", systemImage: "gearshape")
+            }
+        }
+        .fullScreenCover(isPresented: Binding(
+            get: { !hasCompletedOnboarding },
+            set: {
+                if !$0 {
+                    hasCompletedOnboarding = true
+                }
+            }
+        )) {
+            OnboardingPage(
+                systemImage: "brain.head.profile.fill",
+                title: "不被打扰的一段专注",
+                message: "FocusBox 不会强制锁机，也不会读取你的屏幕使用记录。",
+                bullets: [
+                    "专注意图帮你明确现在做什么。",
+                    "计时继续，即使你短暂离开 App。",
+                    "统计只保存在这台 iPhone 上。",
+                ],
+                primaryTitle: "开始使用"
+            ) {
+                hasCompletedOnboarding = true
+            }
+        }
+    }
+}
+
+private struct FocusView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \FocusSessionModel.startedAt, order: .reverse) private var sessions: [FocusSessionModel]
     @State private var selectedMinutes = 25
+    @State private var intention = ""
     @State private var activeSession: FocusSessionModel?
     @State private var remainingSeconds: Int = 0
     @State private var timer: Timer?
-
+    private let haptics: any HapticPerformer
     private let durations = [15, 25, 45, 60]
     private let calculator = FocusStatsCalculator()
 
+    init(haptics: any HapticPerformer, defaultMinutes: Int) {
+        self.haptics = haptics
+        selectedMinutes = defaultMinutes
+    }
+
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    if let session = activeSession {
-                        ActiveSessionCard(
-                            plannedMinutes: session.plannedMinutes,
-                            remainingSeconds: remainingSeconds,
-                            onComplete: completeSession,
-                            onAbandon: abandonSession
-                        )
-                    } else {
-                        SessionSetupCard(
-                            durations: durations,
-                            selectedMinutes: selectedMinutes,
-                            onSelect: { selectedMinutes = $0 },
-                            onStart: startSession
-                        )
-                    }
-
-                    StatsCard(sessions: sessions, calculator: calculator)
-
-                    RecentSessionsCard(sessions: Array(sessions.prefix(5)))
+        ScrollView {
+            VStack(spacing: 16) {
+                if let session = activeSession {
+                    ActiveSessionCard(
+                        plannedMinutes: session.plannedMinutes,
+                        intention: session.intention,
+                        remainingSeconds: remainingSeconds,
+                        onComplete: completeSession,
+                        onAbandon: abandonSession
+                    )
+                } else {
+                    SessionSetupCard(
+                        durations: durations,
+                        selectedMinutes: selectedMinutes,
+                        intention: $intention,
+                        onSelect: { selectedMinutes = $0 },
+                        onStart: startSession
+                    )
                 }
-                .padding(16)
+
+                TodayCard(sessions: sessions, calculator: calculator)
             }
-            .navigationTitle("FocusBox")
-            .onAppear(perform: recoverSession)
-            .onDisappear {
-                timer?.invalidate()
-            }
+            .padding(16)
+        }
+        .navigationTitle("FocusBox")
+        .onAppear(perform: recoverSession)
+        .onDisappear {
+            timer?.invalidate()
         }
     }
 
     private func startSession() {
-        let session = FocusSessionModel(startedAt: Date(), plannedMinutes: selectedMinutes)
+        let session = FocusSessionModel(
+            startedAt: Date(),
+            plannedMinutes: selectedMinutes,
+            intention: intention.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : intention
+        )
         modelContext.insert(session)
         activeSession = session
         remainingSeconds = selectedMinutes * 60
@@ -91,6 +153,7 @@ struct ContentView: View {
         activeSession?.status = FocusSessionStatus.completed.rawValue
         try? modelContext.save()
         activeSession = nil
+        haptics.perform(.success)
     }
 
     private func abandonSession() {
@@ -105,12 +168,18 @@ struct ContentView: View {
 private struct SessionSetupCard: View {
     let durations: [Int]
     let selectedMinutes: Int
+    @Binding var intention: String
     let onSelect: (Int) -> Void
     let onStart: () -> Void
 
     var body: some View {
         CardContainer {
-            Text("选择专注时长")
+            Text("这次专注做什么？")
+                .font(.headline)
+            TextField("例如：整理项目大纲", text: $intention)
+                .textFieldStyle(.roundedBorder)
+
+            Text("专注时长")
                 .font(.headline)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 10) {
                 ForEach(durations, id: \.self) { minutes in
@@ -130,6 +199,14 @@ private struct SessionSetupCard: View {
                     .buttonStyle(.plain)
                 }
             }
+
+            Stepper(value: Binding(
+                get: { selectedMinutes },
+                set: { onSelect($0) }
+            ), in: 5 ... 180, step: 5) {
+                Text("自定义 \(selectedMinutes) 分钟")
+            }
+
             PrimaryButton("开始专注", systemImage: "play.fill") {
                 onStart()
             }
@@ -139,6 +216,7 @@ private struct SessionSetupCard: View {
 
 private struct ActiveSessionCard: View {
     let plannedMinutes: Int
+    let intention: String?
     let remainingSeconds: Int
     let onComplete: () -> Void
     let onAbandon: () -> Void
@@ -153,6 +231,12 @@ private struct ActiveSessionCard: View {
             VStack(spacing: 14) {
                 Text("专注中")
                     .font(.headline)
+                if let intention {
+                    Text(intention)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
                 Text(timeString)
                     .font(.system(size: 52, weight: .semibold, design: .rounded))
                     .monospacedDigit()
@@ -173,32 +257,55 @@ private struct ActiveSessionCard: View {
     }
 }
 
-private struct StatsCard: View {
+private struct TodayCard: View {
     let sessions: [FocusSessionModel]
     let calculator: FocusStatsCalculator
 
     var body: some View {
         CardContainer {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("今日专注")
-                            .font(.headline)
-                        Text("\(calculator.completedMinutesToday(sessions: sessions, today: Date())) 分钟")
-                            .font(.title2.weight(.semibold))
-                    }
-                    Spacer()
-                    Image(systemName: "brain.head.profile")
-                        .font(.title)
-                        .foregroundStyle(.tint)
+            HStack {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("今日专注")
+                        .font(.headline)
+                    Text("\(calculator.completedMinutesToday(sessions: sessions, today: Date())) 分钟")
+                        .font(.title2.weight(.semibold))
                 }
-
-                TrendBarChart(
-                    title: "最近 7 天",
-                    unit: "每日已完成专注分钟数",
-                    data: trendValues
-                )
+                Spacer()
+                Image(systemName: "brain.head.profile")
+                    .font(.title)
+                    .foregroundStyle(.tint)
             }
+        }
+    }
+}
+
+private struct StatsView: View {
+    @Query(sort: \FocusSessionModel.startedAt, order: .reverse) private var sessions: [FocusSessionModel]
+    private let calculator = FocusStatsCalculator()
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                TrendCard(sessions: sessions, calculator: calculator)
+                RecentSessionsCard(sessions: Array(sessions.prefix(12)))
+            }
+            .padding(16)
+        }
+        .navigationTitle("统计")
+    }
+}
+
+private struct TrendCard: View {
+    let sessions: [FocusSessionModel]
+    let calculator: FocusStatsCalculator
+
+    var body: some View {
+        CardContainer {
+            TrendBarChart(
+                title: "最近 7 天",
+                unit: "每日已完成专注分钟数",
+                data: trendValues
+            )
         }
     }
 
@@ -227,24 +334,60 @@ private struct RecentSessionsCard: View {
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(sessions) { session in
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
                             Text("\(session.plannedMinutes) 分钟")
                                 .font(.body.weight(.medium))
-                            Text(session.startedAt, style: .date)
+                            Spacer()
+                            StatusBarChip(
+                                text: session.status,
+                                systemImage: session.status == "completed" ? "checkmark.circle" : "xmark.circle",
+                                tint: session.status == "completed" ? .green : .red
+                            )
+                        }
+                        if let intention = session.intention {
+                            Text(intention)
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                         }
-                        Spacer()
-                        StatusBarChip(
-                            text: session.status,
-                            systemImage: session.status == "completed" ? "checkmark.circle" : "xmark.circle",
-                            tint: session.status == "completed" ? .green : .red
-                        )
+                        Text(session.startedAt.formatted(date: .abbreviated, time: .shortened))
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, 4)
                 }
             }
         }
+    }
+}
+
+private struct SettingsView: View {
+    @Binding var defaultMinutes: Int
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                SettingSection(title: "默认设置") {
+                    Stepper(value: $defaultMinutes, in: 5 ... 180, step: 5) {
+                        Text("默认时长 \(defaultMinutes) 分钟")
+                    }
+                }
+
+                SettingSection(title: "行为边界") {
+                    SettingRow(
+                        systemImage: "lock.open",
+                        title: "不强制锁机",
+                        detail: "你可以离开 App，计时继续。"
+                    )
+                    SettingRow(
+                        systemImage: "eye.slash",
+                        title: "不读取屏幕使用记录",
+                        detail: "专注统计只来自 App 内会话。"
+                    )
+                }
+            }
+            .padding(16)
+        }
+        .navigationTitle("设置")
     }
 }

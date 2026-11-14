@@ -56,17 +56,32 @@ struct TodayView: View {
 
             HStack(spacing: 12) {
                 ForEach(0 ..< 5, id: \.self) { index in
-                    Circle()
-                        .fill(AtEaseDesignTokens.moodColors[index])
-                        .frame(width: 44, height: 44)
-                        .opacity(isMoodSelected(index))
-                        .scaleEffect(selectedMood == index ? 1.08 : 1)
-                        .onTapGesture {
-                            selectMood(index)
-                        }
-                        .accessibilityLabel(AtEaseDesignTokens.moodTitles[index])
+                    VStack(spacing: 6) {
+                        Circle()
+                            .fill(AtEaseDesignTokens.moodColors[index])
+                            .frame(width: 44, height: 44)
+                            .opacity(isMoodSelected(index))
+                            .scaleEffect(selectedMood == index ? 1.08 : 1)
+                        Text(AtEaseDesignTokens.moodTitles[index])
+                            .font(.caption2)
+                            .foregroundStyle(
+                                selectedMood == index
+                                    ? AtEaseDesignTokens.textPrimary
+                                    : AtEaseDesignTokens.textSecondary
+                            )
+                    }
+                    .contentShape(.rect)
+                    .onTapGesture {
+                        selectMood(index)
+                    }
+                    .accessibilityLabel(AtEaseDesignTokens.moodTitles[index])
+                    .accessibilityAddTraits(selectedMood == index ? .isSelected : [])
                 }
             }
+
+            Text("从左到右：平静 → 焦躁。没有对错。")
+                .font(.caption)
+                .foregroundStyle(AtEaseDesignTokens.textSecondary)
 
             if selectedMood != nil {
                 Text("已经记下。不需要解释。")

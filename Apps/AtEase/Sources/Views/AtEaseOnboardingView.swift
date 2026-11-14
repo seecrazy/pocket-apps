@@ -46,22 +46,37 @@ struct AtEaseOnboardingView: View {
 
                         HStack(spacing: 12) {
                             ForEach(0 ..< 5, id: \.self) { index in
-                                Circle()
-                                    .fill(AtEaseDesignTokens.moodColors[index])
-                                    .frame(width: 44, height: 44)
-                                    .opacity(preferredMoods.contains(index) ? 1 : 0.45)
-                                    .scaleEffect(preferredMoods.contains(index) ? 1.08 : 1)
-                                    .onTapGesture {
-                                        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                                            if preferredMoods.contains(index) {
-                                                preferredMoods.remove(index)
-                                            } else {
-                                                preferredMoods.insert(index)
-                                            }
+                                VStack(spacing: 6) {
+                                    Circle()
+                                        .fill(AtEaseDesignTokens.moodColors[index])
+                                        .frame(width: 44, height: 44)
+                                        .opacity(preferredMoods.contains(index) ? 1 : 0.45)
+                                        .scaleEffect(preferredMoods.contains(index) ? 1.08 : 1)
+                                    Text(AtEaseDesignTokens.moodTitles[index])
+                                        .font(.caption2)
+                                        .foregroundStyle(
+                                            preferredMoods.contains(index)
+                                                ? AtEaseDesignTokens.textPrimary
+                                                : AtEaseDesignTokens.textSecondary
+                                        )
+                                }
+                                .contentShape(.rect)
+                                .onTapGesture {
+                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                                        if preferredMoods.contains(index) {
+                                            preferredMoods.remove(index)
+                                        } else {
+                                            preferredMoods.insert(index)
                                         }
                                     }
+                                }
+                                .accessibilityLabel(AtEaseDesignTokens.moodTitles[index])
                             }
                         }
+
+                        Text("从左到右：平静 → 焦躁。选当前更接近的状态。")
+                            .font(.caption)
+                            .foregroundStyle(AtEaseDesignTokens.textSecondary)
                     }
                     .padding(.horizontal, AtEaseDesignTokens.pagePadding)
                     .tag(2)

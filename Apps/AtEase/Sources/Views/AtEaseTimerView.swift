@@ -6,6 +6,8 @@ import SwiftUI
 struct AtEaseTimerView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @StateObject private var audioGuide = AtEaseAudioGuide()
+    @AppStorage("atease.voiceGuidanceEnabled") private var voiceGuidanceEnabled = true
     @State private var minutes: Int
     @State private var remainingSeconds: Int
     @State private var isRunning = false
@@ -34,7 +36,18 @@ struct AtEaseTimerView: View {
                             .foregroundStyle(.white.opacity(0.4))
                     }
                     .padding(.leading, 24)
+
                     Spacer()
+
+                    Button {
+                        voiceGuidanceEnabled.toggle()
+                    } label: {
+                        Image(systemName: voiceGuidanceEnabled ? "speaker.wave.2" : "speaker.slash")
+                            .font(.body)
+                            .foregroundStyle(.white.opacity(0.4))
+                    }
+                    .accessibilityLabel(voiceGuidanceEnabled ? "关闭声音引导" : "开启声音引导")
+                    .padding(.trailing, 24)
                 }
                 .padding(.top, 24)
 
@@ -80,6 +93,9 @@ struct AtEaseTimerView: View {
     private func start() {
         startedAt = Date()
         isRunning = true
+        if voiceGuidanceEnabled {
+            audioGuide.startTimer()
+        }
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
             Task { @MainActor in
@@ -96,6 +112,9 @@ struct AtEaseTimerView: View {
 
     private func tick() {
         guard remainingSeconds > 1 else {
+            if voiceGuidanceEnabled {
+                audioGuide.finish()
+            }
             saveSession()
             dismiss()
             return

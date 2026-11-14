@@ -7,9 +7,12 @@ struct AtEaseBreathView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @StateObject private var engine: BreathingEngine
+    @StateObject private var audioGuide = AtEaseAudioGuide()
     @State private var startedAt = Date()
     @State private var showsExitConfirmation = false
     @State private var hapticsEnabled = UserDefaults.standard.bool(forKey: "atease.hapticsEnabled")
+    @AppStorage("atease.voiceGuidanceEnabled") private var voiceGuidanceEnabled = true
+    private let hapticPlayer = SystemAtEaseHapticPlayer()
     let practiceKind: AtEasePracticeKind
     let moodLevel: Int?
 
@@ -37,7 +40,18 @@ struct AtEaseBreathView: View {
                             .foregroundStyle(.white.opacity(0.4))
                     }
                     .padding(.leading, 24)
+
                     Spacer()
+
+                    Button {
+                        voiceGuidanceEnabled.toggle()
+                    } label: {
+                        Image(systemName: voiceGuidanceEnabled ? "speaker.wave.2" : "speaker.slash")
+                            .font(.body)
+                            .foregroundStyle(.white.opacity(0.4))
+                    }
+                    .accessibilityLabel(voiceGuidanceEnabled ? "关闭声音引导" : "开启声音引导")
+                    .padding(.trailing, 24)
                 }
                 .padding(.top, 24)
 
@@ -81,9 +95,20 @@ struct AtEaseBreathView: View {
         .onAppear {
             engine.hapticsEnabled = hapticsEnabled
             engine.start()
+            if voiceGuidanceEnabled {
+                audioGuide.phase(engine.phase)
+            }
         }
         .onDisappear {
             engine.stop()
+        }
+        .onChange(of: engine.phase) { _, phase in
+            if hapticsEnabled {
+                hapticPlayer.phaseChange()
+            }
+            if voiceGuidanceEnabled {
+                audioGuide.phase(phase)
+            }
         }
         .confirmationDialog(
             "结束本次呼吸？",

@@ -6,6 +6,7 @@ import SwiftUI
 struct AtEaseSettingsView: View {
     @AppStorage("atease.hapticsEnabled") private var hapticsEnabled = true
     @AppStorage("atease.defaultMinutes") private var defaultMinutes = 5
+    @AppStorage("atease.voiceGuidanceEnabled") private var voiceGuidanceEnabled = true
     @Environment(\.modelContext) private var modelContext
     @Query private var sessions: [PracticeSessionModel]
 
@@ -32,6 +33,8 @@ struct AtEaseSettingsView: View {
                 .foregroundStyle(AtEaseDesignTokens.textPrimary)
 
             Toggle("触觉辅助", isOn: $hapticsEnabled)
+                .tint(AtEaseDesignTokens.accentBreath)
+            Toggle("声音引导", isOn: $voiceGuidanceEnabled)
                 .tint(AtEaseDesignTokens.accentBreath)
             Stepper(value: $defaultMinutes, in: 1 ... 60) {
                 Text("默认时长 \(defaultMinutes) 分钟")

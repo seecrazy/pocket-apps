@@ -65,8 +65,6 @@ final class BreathingEngine: ObservableObject {
         }
         phase = next
         phaseRemaining = next.seconds
-        if hapticsEnabled {
-            onPhaseChange?(next)
-        }
+        onPhaseChange?(next)
     }
 }

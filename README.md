@@ -40,6 +40,7 @@
 | SlowCard | 慢递明信片 | 延迟解锁卡片、到达倒计时、收藏、归档、写作提示 | `com.pocketapps.slowcard` | `1.3.0` |
 | AmbientLog | 环境音记录仪 | 后台录音、实时计时、dBFS 波形、文件导出 | `com.pocketapps.ambientlog` | `1.3.0` |
 | TabStash iOS | 标签收纳 | JSON 导入/导出、集合管理、批量已读、搜索 | `com.pocketapps.tabstash` | `1.3.0` |
+| At Ease（心安） | 冥想 · 呼吸 · 助眠 | 无登录呼吸、计时器、情绪签到、本地进度 | `com.pocketapps.atease` | `0.1.0` |
 
 每个 App 都有独立的 README、设计文档和进度文档：
 
@@ -50,6 +51,7 @@
 | SlowCard | [README](Apps/SlowCard/README.md) | [DESIGN](Apps/SlowCard/docs/DESIGN.md) | [PROGRESS](Apps/SlowCard/docs/PROGRESS.md) |
 | AmbientLog | [README](Apps/AmbientLog/README.md) | [DESIGN](Apps/AmbientLog/docs/DESIGN.md) | [PROGRESS](Apps/AmbientLog/docs/PROGRESS.md) |
 | TabStash iOS | [README](Apps/TabStash/README.md) | [DESIGN](Apps/TabStash/docs/DESIGN.md) | [PROGRESS](Apps/TabStash/docs/PROGRESS.md) |
+| At Ease（心安） | [README](Apps/AtEase/README.md) | [DESIGN](Apps/AtEase/docs/DESIGN.md) | [PROGRESS](Apps/AtEase/docs/PROGRESS.md) |
 
 TabStash 当前使用本地 JSON 文件作为插件与 iOS 之间的数据交换层；iCloud 容器尚未启用。
 

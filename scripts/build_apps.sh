@@ -9,6 +9,7 @@ apps=(
   SlowCard
   AmbientLog
   TabStash
+  AtEase
 )
 
 for app in "${apps[@]}"; do

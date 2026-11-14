@@ -9,6 +9,7 @@ apps=(
   SlowCard
   AmbientLog
   TabStash
+  AtEase
 )
 
 echo "==> Checking release metadata"
@@ -32,8 +33,12 @@ for app in "${apps[@]}"; do
     fi
   done
 
-  if ! grep -q 'version: "1.3.0"' "$manifest"; then
-    echo "Expected version 1.3.0 in $manifest"
+  expected_version="1.3.0"
+  if [ "$app" == "AtEase" ]; then
+    expected_version="0.1.0"
+  fi
+  if ! grep -q "version: \"$expected_version\"" "$manifest"; then
+    echo "Expected version $expected_version in $manifest"
     exit 1
   fi
   echo "OK: $app"

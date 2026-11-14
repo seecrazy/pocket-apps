@@ -1,7 +1,7 @@
 # Pocket Apps 设计文档
 
 > 状态：已采纳
-> 更新时间：2026-11-14（v1.1 发布准备）
+> 更新时间：2026-11-14（v1.3 / At Ease v0.1 发布准备）
 
 ## 1. 目标与非目标
 
@@ -22,7 +22,7 @@
 
 ## 2. 产品定位
 
-`pocket-apps` 是“口袋应用集”，聚焦独立、即开即用的小工具与体验型产品。首批五个 App 保持独立的 Bundle ID、App Store Connect 记录、版本号与发布节奏。
+`pocket-apps` 是“口袋应用集”，聚焦独立、即开即用的小工具与体验型产品。当前首批产品保持独立的 Bundle ID、App Store Connect 记录、版本号与发布节奏。
 
 | # | App | 副标题 | 方向 | Bundle ID | v1 边界 |
 |---|---|---|---|---|---|
@@ -31,6 +31,7 @@
 | 3 | SlowCard | 慢递明信片 | 慢交互与情绪价值 | `com.pocketapps.slowcard` | 本地慢递卡片；v1 不做真实邮政寄送 |
 | 4 | AmbientLog | 环境音记录仪 | iOS 独占能力工具 | `com.pocketapps.ambientlog` | 本机录音、环境记录；不做自动上传 |
 | 5 | TabStash iOS | 标签收纳 | 浏览器插件伴侣 | `com.pocketapps.tabstash` | 通过 `PocketTabStash.v1` JSON 导入/导出标签页集合；不做浏览器执行注入 |
+| 6 | At Ease（心安） | 冥想 · 呼吸 · 助眠 | 低门槛冥想 | `com.pocketapps.atease` | v0.1 只做呼吸、计时器、情绪签到与本机进度；不做订阅、云内容和 HealthKit |
 
 ## 3. 架构总览
 

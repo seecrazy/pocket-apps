@@ -9,5 +9,6 @@ let workspace = Workspace(
         "Apps/SlowCard",
         "Apps/AmbientLog",
         "Apps/TabStash",
+        "Apps/AtEase",
     ]
 )

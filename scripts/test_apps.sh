@@ -9,6 +9,7 @@ apps=(
   SlowCard
   AmbientLog
   TabStash
+  AtEase
 )
 
 simulator_name="${IOS_SIMULATOR_NAME:-iPhone 17}"

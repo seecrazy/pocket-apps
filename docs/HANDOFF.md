@@ -35,7 +35,7 @@ AmbientLog 已增加 dBFS 说明卡片和可读音量描述；后续可继续增
 
 ## 当前可验证状态
 
-仓库已在本机用 Tuist 4.216.6 / Xcode 27.2 执行 `scripts/release_preflight.sh`，并全部通过：release metadata 检查、Workspace 生成、SwiftFormat/SwiftLint、共享包测试、五个 App 测试和五个 App 构建。
+仓库已在本机用 Tuist 4.216.6 / Xcode 27.2 执行 `scripts/release_preflight.sh`，并全部通过：release metadata 检查、Workspace 生成、SwiftFormat/SwiftLint、共享包测试、全部 App 测试和全部 App 构建。
 
 ```bash
 cd /Users/xiaoyyu/IdeaProjects/pocket-apps
@@ -60,3 +60,5 @@ cd /Users/xiaoyyu/IdeaProjects/pocket-apps
 ## 当前迭代
 
 第四轮开始对标成熟产品：SoloGuard 对标 Reminders/Streaks，FocusBox 对标 Forest/Session，SlowCard 对标 FutureMe，AmbientLog 对标 Voice Memos，TabStash 对标 Pocket/Instapaper。
+
+At Ease（心安）v0.1 MVP 已加入：引导页、情绪签到、推荐呼吸、计时器、SwiftData 本地进度、设置页、隐私清单、App Icon、fastlane metadata 与测试。Core Haptics 精确同步、HealthKit、Live Activity、内容库和订阅是下一阶段。

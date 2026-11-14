@@ -40,6 +40,15 @@ lane :tabstash_release do
   build_and_submit(scheme: "TabStash", bundle_id: "com.pocketapps.tabstash")
 end
 
+lane :atease_beta do
+  build_and_upload(scheme: "AtEase", bundle_id: "com.pocketapps.atease")
+end
+
+lane :atease_release do
+  build_and_submit(scheme: "AtEase", bundle_id: "com.pocketapps.atease")
+end
+
+
 private_lane :build_and_upload do |options|
   setup_ci
   sync_profiles(bundle_id: options[:bundle_id])

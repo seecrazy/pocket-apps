@@ -4,7 +4,7 @@
 
 日期：2026-11-14
 
-五个 App 已进入 **v1.1 发布准备**。仓库内工程、功能、隐私清单、可测试性和发布流水线骨架已经齐备；实际 App Store / TestFlight 交付依赖 Apple 开发者账号、证书与签名资源。
+六个 App 已进入发布准备阶段：前五个 App 处于 v1.3 工程内可发布状态，At Ease 处于 v0.1 MVP 状态。仓库内工程、功能、隐私清单、可测试性和发布流水线骨架已经齐备；实际 App Store / TestFlight 交付依赖 Apple 开发者账号、证书与签名资源。
 
 ## 已完成
 
@@ -12,11 +12,11 @@
 
 - [x] Tuist Workspace、本地 SPM Package、模板 App。
 - [x] SwiftLint / SwiftFormat / scripts。
-- [x] CI：lint、生成、共享包测试、App 测试、五个 App 构建。
+- [x] CI：lint、生成、共享包测试、App 测试、全部 App 构建。
 - [x] Release workflow：按 `<App>@<version>` tag 独立发布。
-- [x] fastlane lane：五个 App 的 beta / release。
+- [x] fastlane lane：六个 App 的 beta / release。
 - [x] fastlane metadata 文案骨架。
-- [x] 五个 App 独立 README / 设计文档 / 进度文档。
+- [x] 六个 App 独立 README / 设计文档 / 进度文档。
 
 ### SoloGuard
 
@@ -77,12 +77,12 @@
 ### App Store 依赖
 
 - [ ] Apple Developer Team ID。
-- [ ] 五个 App Store Connect App 记录。
+- [ ] 六个 App Store Connect App 记录。
 - [ ] match 证书仓库。
-- [ ] 五个 provisioning profile。
+- [ ] 六个 provisioning profile。
 - [ ] App Store Connect API Key。
 - [ ] App Store 隐私问卷。
-- [ ] 五套截图。
+- [ ] 六套截图。
 - [ ] 将 metadata 中支持/隐私 URL 替换为最终域名。
 - [ ] TestFlight 端到端发布验证。
 
@@ -151,6 +151,15 @@
 - [x] 后台音频模式。
 - [x] dBFS 音量统计与波形。
 - [x] dBFS 解释卡片。
+
+### At Ease
+
+- [x] v0.1 MVP：呼吸、计时器、情绪签到、本地进度。
+- [ ] Core Haptics 与呼吸节奏精确同步。
+- [ ] HealthKit 正念分钟写入。
+- [ ] Live Activity 锁屏呼吸节奏。
+- [ ] 念头放下交互。
+- [ ] 引导冥想与订阅内容。
 
 ### TabStash
 

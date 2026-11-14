@@ -18,6 +18,13 @@ struct ContentView: View {
             }
 
             NavigationStack {
+                SafetyView()
+            }
+            .tabItem {
+                Label("守护", systemImage: "shield")
+            }
+
+            NavigationStack {
                 HistoryView()
             }
             .tabItem {
@@ -62,6 +69,7 @@ private struct HomeView: View {
     @Query private var records: [CheckInRecordModel]
     @State private var showsCreatePlan = false
     @State private var deletingPlan: CheckInPlanModel?
+    @State private var editingPlan: CheckInPlanModel?
     private let scheduler: any NotificationScheduling
     private let haptics: any HapticPerformer
     private let calculator = StreakCalculator()
@@ -107,6 +115,7 @@ private struct HomeView: View {
                                 streak: calculator.streak(for: plan.id, records: records, today: Date()),
                                 onToggle: { toggle(plan) },
                                 onCheckIn: { checkIn(plan) },
+                                onEdit: { editingPlan = plan },
                                 onDelete: { deletingPlan = plan }
                             )
                         }
@@ -128,6 +137,9 @@ private struct HomeView: View {
         }
         .sheet(isPresented: $showsCreatePlan) {
             CreatePlanSheet(scheduler: scheduler)
+        }
+        .sheet(item: $editingPlan) { plan in
+            EditPlanSheet(plan: plan, scheduler: scheduler)
         }
         .confirmationDialog(
             "删除计划？",
@@ -199,10 +211,13 @@ private struct HomeView: View {
 private struct HistoryView: View {
     @Query(sort: \CheckInRecordModel.day, order: .reverse) private var records: [CheckInRecordModel]
     @Query(sort: \CheckInPlanModel.createdAt) private var plans: [CheckInPlanModel]
+    private let trendCalculator = SoloGuardTrendCalculator()
 
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
+                TrendCard(records: records, calculator: trendCalculator)
+
                 if records.isEmpty {
                     EmptyStateView(
                         systemImage: "calendar.day.timeline.left",
@@ -250,6 +265,32 @@ private struct HistoryRow: View {
     }
 }
 
+private struct TrendCard: View {
+    let records: [CheckInRecordModel]
+    let calculator: SoloGuardTrendCalculator
+
+    var body: some View {
+        CardContainer {
+            TrendBarChart(
+                title: "最近 14 天",
+                unit: "每日完成计划数",
+                data: trendValues
+            )
+        }
+    }
+
+    private var trendValues: [TrendBarChart.TrendValue] {
+        let formatter = DateFormatter()
+        formatter.locale = Locale.current
+        formatter.calendar = Calendar.current
+        formatter.dateFormat = "d"
+
+        return calculator.dailySummaries(records: records, today: Date(), days: 14).map {
+            TrendBarChart.TrendValue(label: formatter.string(from: $0.day), value: $0.completedCount)
+        }
+    }
+}
+
 private struct SettingsView: View {
     var body: some View {
         ScrollView {
@@ -293,6 +334,7 @@ private struct PlanCard: View {
     let streak: Int
     let onToggle: () -> Void
     let onCheckIn: () -> Void
+    let onEdit: () -> Void
     let onDelete: () -> Void
 
     var body: some View {
@@ -323,6 +365,14 @@ private struct PlanCard: View {
                     }
                     .buttonStyle(.bordered)
                     .accessibilityLabel(plan.isEnabled ? "关闭提醒" : "开启提醒")
+
+                    Button {
+                        onEdit()
+                    } label: {
+                        Image(systemName: "pencil")
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityLabel("编辑计划")
 
                     Button(role: .destructive) {
                         onDelete()
@@ -387,6 +437,66 @@ private struct CreatePlanSheet: View {
                                 body: "确认一下今天是否正常。"
                             )
                         }
+                    }
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+private struct EditPlanSheet: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    @State private var title: String
+    @State private var reminder: Date
+    let plan: CheckInPlanModel
+    let scheduler: any NotificationScheduling
+
+    init(plan: CheckInPlanModel, scheduler: any NotificationScheduling) {
+        self.plan = plan
+        self.scheduler = scheduler
+        var components = DateComponents()
+        components.hour = plan.reminderHour
+        components.minute = plan.reminderMinute
+        _title = State(initialValue: plan.title)
+        _reminder = State(initialValue: Calendar.current.date(from: components) ?? Date())
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                TextField("计划名称", text: $title)
+                DatePicker("提醒时间", selection: $reminder, displayedComponents: .hourAndMinute)
+            }
+            .navigationTitle("编辑计划")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("保存") {
+                        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+                        plan.title = trimmedTitle.isEmpty ? "日常确认" : trimmedTitle
+                        let components = Calendar.current.dateComponents([.hour, .minute], from: reminder)
+                        plan.reminderHour = components.hour ?? plan.reminderHour
+                        plan.reminderMinute = components.minute ?? plan.reminderMinute
+                        try? modelContext.save()
+
+                        Task {
+                            if plan.isEnabled {
+                                guard await scheduler.requestAuthorization() else { return }
+                                try? await scheduler.scheduleDailyReminder(
+                                    id: SoloGuardNotifications.id(for: plan.id),
+                                    hour: plan.reminderHour,
+                                    minute: plan.reminderMinute,
+                                    title: "生活确认",
+                                    body: "确认一下今天是否正常。"
+                                )
+                            } else {
+                                await scheduler.cancel(ids: [SoloGuardNotifications.id(for: plan.id)])
+                            }
+                        }
+                        dismiss()
                     }
                 }
                 ToolbarItem(placement: .cancellationAction) {

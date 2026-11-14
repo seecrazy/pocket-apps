@@ -5,7 +5,7 @@
   <img alt="SwiftUI" src="https://img.shields.io/badge/UI-SwiftUI-32ADE6">
   <img alt="SwiftData" src="https://img.shields.io/badge/Data-SwiftData-0A84FF">
   <img alt="Status" src="https://img.shields.io/badge/release_ready_in_repo-34C759">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.1.0-8E8E93">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.2.0-8E8E93">
 </p>
 
 > 给未来的自己写一封会准时到达的信。
@@ -96,7 +96,7 @@ IOS_SIMULATOR_NAME="iPhone 17" ./scripts/test_apps.sh
 
 ## 发布状态
 
-v1.1 工程内可发布。发布前在根目录执行：
+v1.2 工程内可发布。发布前在根目录执行：
 
 ```bash
 ./scripts/release_preflight.sh

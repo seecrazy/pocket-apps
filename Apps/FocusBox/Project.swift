@@ -7,7 +7,7 @@ let project = appProject(
         displayName: "FocusBox",
         subtitle: "专注盒子",
         bundleID: "com.pocketapps.focusbox",
-        version: "1.1.0"
+        version: "1.2.0"
     ),
     testDependencies: [.package(product: "PocketTestKit")]
 )

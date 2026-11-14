@@ -5,12 +5,20 @@
   <img alt="SwiftUI" src="https://img.shields.io/badge/UI-SwiftUI-32ADE6">
   <img alt="SwiftData" src="https://img.shields.io/badge/Data-SwiftData-0A84FF">
   <img alt="Status" src="https://img.shields.io/badge/release_ready_in_repo-34C759">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.1.0-8E8E93">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.2.0-8E8E93">
 </p>
 
 > 为独居生活建立轻量的日常确认习惯。
 
 SoloGuard 不做紧急联系人外发，也不上传生活状态。它把“今天正常吗”变成一个低压力、可回看的本地仪式，帮助独居用户观察自己的日常节奏。
+
+## v1.2 更新
+
+- 新增守护联系人：本机保存姓名、电话、关系与备注。
+- 新增安全状态卡：汇总最近确认、连续状态和需要查看提示。
+- 新增快速行动：呼叫联系人、打开短信、系统分享、呼叫紧急号码。
+- 新增最近 14 天签到趋势。
+- 支持编辑计划并重新调度提醒。
 
 ## 目录
 
@@ -96,7 +104,7 @@ IOS_SIMULATOR_NAME="iPhone 17" ./scripts/test_apps.sh
 
 ## 发布状态
 
-v1.1 工程内可发布。发布前在根目录执行：
+v1.2 工程内可发布。发布前在根目录执行：
 
 ```bash
 ./scripts/release_preflight.sh

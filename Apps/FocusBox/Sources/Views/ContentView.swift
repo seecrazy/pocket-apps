@@ -6,12 +6,13 @@ import SwiftUI
 struct ContentView: View {
     @AppStorage("focusbox.hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("focusbox.defaultMinutes") private var defaultMinutes = 25
+    @AppStorage("focusbox.lockMode") private var lockMode = FocusLockMode.off.rawValue
     @State private var haptics: any HapticPerformer = SystemHaptics()
 
     var body: some View {
         TabView {
             NavigationStack {
-                FocusView(haptics: haptics, defaultMinutes: defaultMinutes)
+                FocusView(haptics: haptics, defaultMinutes: defaultMinutes, lockMode: lockMode)
             }
             .tabItem {
                 Label("专注", systemImage: "timer")
@@ -25,7 +26,7 @@ struct ContentView: View {
             }
 
             NavigationStack {
-                SettingsView(defaultMinutes: $defaultMinutes)
+                SettingsView(defaultMinutes: $defaultMinutes, lockMode: $lockMode)
             }
             .tabItem {
                 Label("设置", systemImage: "gearshape")
@@ -45,7 +46,7 @@ struct ContentView: View {
                 message: "FocusBox 不会强制锁机，也不会读取你的屏幕使用记录。",
                 bullets: [
                     "专注意图帮你明确现在做什么。",
-                    "计时继续，即使你短暂离开 App。",
+                    "切屏或锁屏后回来，倒计时按真实时间恢复。",
                     "统计只保存在这台 iPhone 上。",
                 ],
                 primaryTitle: "开始使用"
@@ -57,6 +58,7 @@ struct ContentView: View {
 }
 
 private struct FocusView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \FocusSessionModel.startedAt, order: .reverse) private var sessions: [FocusSessionModel]
     @State private var selectedMinutes = 25
@@ -68,8 +70,11 @@ private struct FocusView: View {
     private let durations = [15, 25, 45, 60]
     private let calculator = FocusStatsCalculator()
 
-    init(haptics: any HapticPerformer, defaultMinutes: Int) {
+    private let lockMode: FocusLockMode
+
+    init(haptics: any HapticPerformer, defaultMinutes: Int, lockMode: String) {
         self.haptics = haptics
+        self.lockMode = FocusLockMode(rawValue: lockMode) ?? .off
         selectedMinutes = defaultMinutes
     }
 
@@ -81,7 +86,11 @@ private struct FocusView: View {
                         plannedMinutes: session.plannedMinutes,
                         intention: session.intention,
                         remainingSeconds: remainingSeconds,
+                        isPaused: session.status == FocusSessionStatus.paused.rawValue,
                         onComplete: completeSession,
+                        onTogglePause: {
+                            session.status == FocusSessionStatus.paused.rawValue ? resumeSession(session) : pauseSession(session)
+                        },
                         onAbandon: abandonSession
                     )
                 } else {
@@ -100,8 +109,30 @@ private struct FocusView: View {
         }
         .navigationTitle("FocusBox")
         .onAppear(perform: recoverSession)
+        .onChange(of: scenePhase) { phase in
+            guard phase == .active else { return }
+            refreshRemaining()
+        }
         .onDisappear {
             timer?.invalidate()
+        }
+        .fullScreenCover(isPresented: Binding(
+            get: { activeSession != nil && lockMode == .app },
+            set: { _ in }
+        )) {
+            if let session = activeSession {
+                FocusLockCover(
+                    plannedMinutes: session.plannedMinutes,
+                    intention: session.intention,
+                    remainingSeconds: remainingSeconds,
+                    isPaused: session.status == FocusSessionStatus.paused.rawValue,
+                    onComplete: completeSession,
+                    onTogglePause: {
+                        session.status == FocusSessionStatus.paused.rawValue ? resumeSession(session) : pauseSession(session)
+                    },
+                    onAbandon: abandonSession
+                )
+            }
         }
     }
 
@@ -113,31 +144,39 @@ private struct FocusView: View {
         )
         modelContext.insert(session)
         activeSession = session
-        remainingSeconds = selectedMinutes * 60
+        remainingSeconds = FocusSessionTimeline.remainingSeconds(session: session, now: Date())
         startTimer()
     }
 
     private func startTimer() {
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-            if remainingSeconds > 0 {
-                remainingSeconds -= 1
-            } else {
-                completeSession()
-            }
+            refreshRemaining()
+        }
+    }
+
+    private func refreshRemaining() {
+        guard let session = activeSession, session.status == FocusSessionStatus.running.rawValue else { return }
+        remainingSeconds = FocusSessionTimeline.remainingSeconds(session: session, now: Date())
+        if remainingSeconds == 0 {
+            completeSession()
         }
     }
 
     private func recoverSession() {
         guard activeSession == nil else { return }
         let now = Date()
-        guard let session = sessions.first(where: { $0.status == FocusSessionStatus.running.rawValue }) else { return }
+        guard let session = sessions.first(where: {
+            $0.status == FocusSessionStatus.running.rawValue || $0.status == FocusSessionStatus.paused.rawValue
+        }) else { return }
 
         switch FocusSessionRecovery.decision(session: session, now: now) {
         case let .resume(secondsLeft):
             activeSession = session
             remainingSeconds = secondsLeft
-            startTimer()
+            if session.status == FocusSessionStatus.running.rawValue {
+                startTimer()
+            }
         case let .complete(date):
             session.completedAt = date
             session.status = FocusSessionStatus.completed.rawValue
@@ -154,6 +193,30 @@ private struct FocusView: View {
         try? modelContext.save()
         activeSession = nil
         haptics.perform(.success)
+    }
+
+    private func pauseSession(_ session: FocusSessionModel) {
+        timer?.invalidate()
+        session.status = FocusSessionStatus.paused.rawValue
+        session.pausedAt = Date()
+        try? modelContext.save()
+    }
+
+    private func resumeSession(_ session: FocusSessionModel) {
+        guard let pausedAt = session.pausedAt else {
+            session.status = FocusSessionStatus.running.rawValue
+            startTimer()
+            return
+        }
+        session.pausedSeconds = FocusSessionPause.totalPausedSeconds(
+            current: session.pausedSeconds,
+            pausedAt: pausedAt,
+            resumedAt: Date()
+        )
+        session.pausedAt = nil
+        session.status = FocusSessionStatus.running.rawValue
+        try? modelContext.save()
+        startTimer()
     }
 
     private func abandonSession() {
@@ -214,11 +277,13 @@ private struct SessionSetupCard: View {
     }
 }
 
-private struct ActiveSessionCard: View {
+struct ActiveSessionCard: View {
     let plannedMinutes: Int
     let intention: String?
     let remainingSeconds: Int
+    let isPaused: Bool
     let onComplete: () -> Void
+    let onTogglePause: () -> Void
     let onAbandon: () -> Void
 
     private var progress: Double {
@@ -231,6 +296,9 @@ private struct ActiveSessionCard: View {
             VStack(spacing: 14) {
                 Text("专注中")
                     .font(.headline)
+                if isPaused {
+                    StatusBarChip(text: "已暂停", systemImage: "pause.circle", tint: .orange)
+                }
                 if let intention {
                     Text(intention)
                         .font(.subheadline)
@@ -242,6 +310,10 @@ private struct ActiveSessionCard: View {
                     .monospacedDigit()
                 ProgressView(value: progress)
                 HStack {
+                    Button(isPaused ? "继续" : "暂停") {
+                        onTogglePause()
+                    }
+                    .buttonStyle(.bordered)
                     Button("放弃", role: .destructive, action: onAbandon)
                         .buttonStyle(.bordered)
                     PrimaryButton("完成", systemImage: "checkmark") {
@@ -363,6 +435,7 @@ private struct RecentSessionsCard: View {
 
 private struct SettingsView: View {
     @Binding var defaultMinutes: Int
+    @Binding var lockMode: String
 
     var body: some View {
         ScrollView {
@@ -373,11 +446,23 @@ private struct SettingsView: View {
                     }
                 }
 
+                SettingSection(title: "专注锁定") {
+                    Picker("锁定模式", selection: $lockMode) {
+                        ForEach(FocusLockMode.allCases) { mode in
+                            Text(mode.title).tag(mode.rawValue)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    Text(FocusLockMode(rawValue: lockMode)?.detail ?? "")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+
                 SettingSection(title: "行为边界") {
                     SettingRow(
-                        systemImage: "lock.open",
-                        title: "不强制锁机",
-                        detail: "你可以离开 App，计时继续。"
+                        systemImage: "lock",
+                        title: "App 内锁定",
+                        detail: "系统级 Screen Time 锁机需要后续 entitlement。"
                     )
                     SettingRow(
                         systemImage: "eye.slash",

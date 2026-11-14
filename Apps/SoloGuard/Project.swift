@@ -7,7 +7,7 @@ let project = appProject(
         displayName: "SoloGuard",
         subtitle: "独居守护",
         bundleID: "com.pocketapps.sologuard",
-        version: "1.1.0"
+        version: "1.2.0"
     ),
     testDependencies: [.package(product: "PocketTestKit")]
 )

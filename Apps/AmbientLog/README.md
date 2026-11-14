@@ -5,12 +5,19 @@
   <img alt="SwiftUI" src="https://img.shields.io/badge/UI-SwiftUI-32ADE6">
   <img alt="SwiftData" src="https://img.shields.io/badge/Data-SwiftData-0A84FF">
   <img alt="Status" src="https://img.shields.io/badge/release_ready_in_repo-34C759">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.1.0-8E8E93">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.2.0-8E8E93">
 </p>
 
 > 把某个地点和时刻的声音留在手机里。
 
 AmbientLog 是本机环境音记录工具，不后台录音、不社交、不上传音频。它用分类和搜索帮用户找回“那家咖啡店的下午”或“地铁口的傍晚”。
+
+## v1.2 更新
+
+- 开启后台音频能力：开始录音后锁屏或切后台可继续录音。
+- 录音启用 metering，实时显示 dBFS、峰值和均值。
+- 保存音量采样并在录音中和历史列表中展示波形。
+- 录音文件支持系统分享导出，并显示文件大小与修改时间。
 
 ## 目录
 
@@ -96,7 +103,7 @@ IOS_SIMULATOR_NAME="iPhone 17" ./scripts/test_apps.sh
 
 ## 发布状态
 
-v1.1 工程内可发布。发布前在根目录执行：
+v1.2 工程内可发布。发布前在根目录执行：
 
 ```bash
 ./scripts/release_preflight.sh

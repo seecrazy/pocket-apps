@@ -26,4 +26,23 @@ final class FocusSessionRecoveryTests: XCTestCase {
             .complete(at: end)
         )
     }
+
+    func testPausedSessionKeepsRemainingTimeFrozen() throws {
+        let calendar = Calendar.current
+        let now = Date()
+        let startedAt = try XCTUnwrap(calendar.date(byAdding: .minute, value: -5, to: now))
+        let pausedAt = try XCTUnwrap(calendar.date(byAdding: .minute, value: -1, to: now))
+        let session = FocusSessionModel(
+            startedAt: startedAt,
+            plannedMinutes: 25,
+            pausedAt: pausedAt,
+            pausedSeconds: 0,
+            status: FocusSessionStatus.paused.rawValue
+        )
+
+        XCTAssertEqual(
+            FocusSessionRecovery.decision(session: session, calendar: calendar, now: now),
+            .resume(secondsLeft: 21 * 60)
+        )
+    }
 }

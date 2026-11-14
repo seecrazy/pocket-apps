@@ -34,8 +34,8 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            recorder.onInterruption = { fileURL, duration in
-                saveRecording(fileURL: fileURL, duration: duration)
+            recorder.onInterruption = { fileURL, duration, levels in
+                saveRecording(fileURL: fileURL, duration: duration, levels: levels)
             }
         }
         .fullScreenCover(isPresented: Binding(
@@ -62,7 +62,7 @@ struct ContentView: View {
         }
     }
 
-    private func saveRecording(fileURL: URL, duration: TimeInterval) {
+    private func saveRecording(fileURL: URL, duration: TimeInterval, levels: [Double]) {
         let startedAt = recorder.recordingStartedAt ?? Date()
         let title = "环境记录 \(startedAt.formatted(date: .abbreviated, time: .shortened))"
         modelContext.insert(
@@ -71,6 +71,7 @@ struct ContentView: View {
                 category: preferredCategory,
                 startedAt: startedAt,
                 duration: duration,
+                levels: levels,
                 fileURLString: fileURL.path
             )
         )
@@ -92,6 +93,10 @@ private struct RecordView: View {
                     isRecording: recorder.isRecording,
                     error: recorder.errorMessage,
                     interruption: recorder.interruptionReason,
+                    levels: recorder.levels,
+                    currentPower: recorder.currentPower,
+                    peakPower: recorder.peakPower,
+                    averagePower: recorder.averagePower,
                     preferredCategory: $preferredCategory,
                     onStart: startRecording,
                     onStop: stopRecording
@@ -140,6 +145,7 @@ private struct RecordView: View {
     private func stopRecording() {
         let duration = recorder.stopRecording()
         guard let fileURL = recorder.lastFileURL else { return }
+        let levels = recorder.lastLevels
         let startedAt = recorder.recordingStartedAt ?? Date()
         let title = "环境记录 \(startedAt.formatted(date: .abbreviated, time: .shortened))"
         modelContext.insert(
@@ -148,11 +154,13 @@ private struct RecordView: View {
                 category: preferredCategory,
                 startedAt: startedAt,
                 duration: duration,
+                levels: levels,
                 fileURLString: fileURL.path
             )
         )
         try? modelContext.save()
         recorder.clearLastFileURL()
+        recorder.clearLastLevels()
     }
 }
 
@@ -323,6 +331,10 @@ private struct RecorderCard: View {
     let isRecording: Bool
     let error: String?
     let interruption: String?
+    let levels: [Double]
+    let currentPower: Double
+    let peakPower: Double
+    let averagePower: Double
     @Binding var preferredCategory: String
     let onStart: () -> Void
     let onStop: () -> Void
@@ -357,6 +369,26 @@ private struct RecorderCard: View {
             }
             .pickerStyle(.segmented)
 
+            AudioWaveformView(levels: levels)
+
+            HStack {
+                StatusBarChip(
+                    text: String(format: "%.0f dBFS", currentPower),
+                    systemImage: "waveform",
+                    tint: .blue
+                )
+                StatusBarChip(
+                    text: String(format: "峰值 %.0f", peakPower),
+                    systemImage: "arrow.up.right",
+                    tint: .orange
+                )
+                StatusBarChip(
+                    text: String(format: "均值 %.0f", averagePower),
+                    systemImage: "chart.bar.fill",
+                    tint: .green
+                )
+            }
+
             PrimaryButton(
                 isRecording ? "停止" : "开始录音",
                 systemImage: isRecording ? "stop.fill" : "record.circle",
@@ -389,6 +421,21 @@ private struct RecordingCard: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
 
+                AudioWaveformView(levels: recording.levels, tint: .secondary)
+
+                HStack {
+                    StatusBarChip(
+                        text: String(format: "峰值 %.0f dBFS", AudioLevelAnalyzer.peakPower(recording.levels)),
+                        systemImage: "arrow.up.right",
+                        tint: .orange
+                    )
+                    StatusBarChip(
+                        text: String(format: "均值 %.0f dBFS", AudioLevelAnalyzer.averagePower(recording.levels)),
+                        systemImage: "chart.bar.fill",
+                        tint: .green
+                    )
+                }
+
                 HStack {
                     Button {
                         isPlaying ? onStop() : onPlay()
@@ -403,10 +450,28 @@ private struct RecordingCard: View {
                     }
                     .accessibilityLabel("重命名录音")
 
+                    ShareLink(
+                        item: recording.fileURL,
+                        preview: SharePreview(recording.title)
+                    ) {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .accessibilityLabel("导出录音")
+
                     Button(role: .destructive, action: onDelete) {
                         Image(systemName: "trash")
                     }
                     .accessibilityLabel("删除录音")
+                }
+
+                if let attributes = try? FileManager.default.attributesOfItem(atPath: recording.fileURL.path) {
+                    let size = attributes[.size] as? Int ?? 0
+                    let modifiedAt = attributes[.modificationDate] as? Date
+                    Text(
+                        "\(ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file)) · 修改于 \(modifiedAt?.formatted(date: .abbreviated, time: .shortened) ?? "未知")"
+                    )
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
                 }
             }
         }
@@ -425,8 +490,8 @@ private struct SettingsView: View {
                     )
                     SettingRow(
                         systemImage: "mic.badge.xmark",
-                        title: "不后台录音",
-                        detail: "只有你主动点击开始时才访问麦克风。"
+                        title: "开始后可后台录音",
+                        detail: "锁屏或切后台继续记录；不会自动开始麦克风。"
                     )
                 }
 

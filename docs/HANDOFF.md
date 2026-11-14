@@ -21,6 +21,14 @@
 - 新增 SF Symbol 存在性测试，修复无效图标与空图标问题。
 - 五个 App 均有独立 README、`docs/DESIGN.md` 与 `docs/PROGRESS.md`。
 
+## 当前迭代
+
+第二轮迭代设计已落文档：计划编辑、专注暂停恢复、任意解锁日期、音频导出、集合管理与批量处理。实现后需同步更新对应 App 的 `docs/PROGRESS.md`。
+
+第三轮产品修正已采纳：FocusBox 改为可配置 App 内锁定并用墙钟恢复倒计时；AmbientLog 增加后台音频模式和 dBFS 波形；SoloGuard 增加本机守护联系人与显式安全状态分享。
+
+当前实现已进入 v1.2.0：SoloGuard / FocusBox / AmbientLog 的第三轮核心能力已完成并通过单元测试；Fastlane metadata 已同步。
+
 ## 当前可验证状态
 
 仓库已在本机用 Tuist 4.216.6 / Xcode 27.2 执行 `scripts/release_preflight.sh`，并全部通过：release metadata 检查、Workspace 生成、SwiftFormat/SwiftLint、共享包测试、五个 App 测试和五个 App 构建。

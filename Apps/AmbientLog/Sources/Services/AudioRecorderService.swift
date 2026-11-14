@@ -7,12 +7,19 @@ final class AudioRecorderService: ObservableObject {
     @Published private(set) var errorMessage: String?
     @Published private(set) var currentFileURL: URL?
     @Published private(set) var interruptionReason: String?
+    @Published private(set) var levels: [Double] = []
+    @Published private(set) var currentPower: Double = AudioLevelAnalyzer.silence
+    @Published private(set) var peakPower: Double = AudioLevelAnalyzer.silence
+    @Published private(set) var averagePower: Double = AudioLevelAnalyzer.silence
     private(set) var lastFileURL: URL?
+    private(set) var lastLevels: [Double] = []
     private(set) var recordingStartedAt: Date?
     private var recorder: AVAudioRecorder?
+    private var meterTimer: Timer?
+    private var allLevels: [Double] = []
     private var interruptionObserver: NSObjectProtocol?
 
-    var onInterruption: ((URL, TimeInterval) -> Void)?
+    var onInterruption: ((URL, TimeInterval, [Double]) -> Void)?
 
     init() {
         interruptionObserver = NotificationCenter.default.addObserver(
@@ -36,8 +43,8 @@ final class AudioRecorderService: ObservableObject {
         let session = AVAudioSession.sharedInstance()
 
         do {
-            try session.setCategory(.playAndRecord, mode: .default)
-            try session.setActive(true)
+            try session.setCategory(.playAndRecord, mode: .default, options: [.allowBluetooth, .defaultToSpeaker])
+            try session.setActive(true, options: [])
         } catch {
             errorMessage = "无法准备录音会话：\(error.localizedDescription)"
             return nil
@@ -47,18 +54,26 @@ final class AudioRecorderService: ObservableObject {
             .appending(path: "Ambient-\(Int(Date().timeIntervalSince1970)).m4a")
 
         do {
-            recorder = try AVAudioRecorder(url: fileURL, settings: [
+            let newRecorder = try AVAudioRecorder(url: fileURL, settings: [
                 AVFormatIDKey: kAudioFormatMPEG4AAC,
                 AVSampleRateKey: 44100,
                 AVNumberOfChannelsKey: 1,
                 AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue,
             ])
-            recorder?.record()
+            newRecorder.isMeteringEnabled = true
+            newRecorder.record()
+            recorder = newRecorder
             isRecording = true
             currentFileURL = fileURL
             recordingStartedAt = Date()
+            allLevels = []
+            levels = []
+            currentPower = AudioLevelAnalyzer.silence
+            peakPower = AudioLevelAnalyzer.silence
+            averagePower = AudioLevelAnalyzer.silence
             errorMessage = nil
             interruptionReason = nil
+            startMetering()
             return fileURL
         } catch {
             errorMessage = "无法开始录音：\(error.localizedDescription)"
@@ -67,17 +82,50 @@ final class AudioRecorderService: ObservableObject {
     }
 
     func stopRecording() -> TimeInterval {
+        sampleMeter()
         let duration = recorder?.currentTime ?? 0
         recorder?.stop()
         recorder = nil
+        stopMetering()
         isRecording = false
         lastFileURL = currentFileURL
+        lastLevels = allLevels
         currentFileURL = nil
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         return duration
     }
 
     func clearLastFileURL() {
         lastFileURL = nil
+    }
+
+    func clearLastLevels() {
+        lastLevels = []
+    }
+
+    private func startMetering() {
+        meterTimer?.invalidate()
+        meterTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.sampleMeter()
+            }
+        }
+    }
+
+    private func stopMetering() {
+        meterTimer?.invalidate()
+        meterTimer = nil
+    }
+
+    private func sampleMeter() {
+        guard let recorder, recorder.isRecording, recorder.isMeteringEnabled else { return }
+        recorder.updateMeters()
+        let power = Double(recorder.averagePower(forChannel: 0))
+        allLevels.append(power)
+        levels = Array(allLevels.suffix(120))
+        currentPower = power
+        peakPower = max(peakPower, power)
+        averagePower = AudioLevelAnalyzer.averagePower(allLevels)
     }
 
     private func handleInterruption(_ notification: Notification) {
@@ -88,7 +136,7 @@ final class AudioRecorderService: ObservableObject {
         interruptionReason = Self.interruptionDescription(from: userInfo)
         guard isRecording, let fileURL = currentFileURL else { return }
         let duration = stopRecording()
-        onInterruption?(fileURL, duration)
+        onInterruption?(fileURL, duration, allLevels)
     }
 
     nonisolated static func interruptionDescription(from userInfo: [AnyHashable: Any]) -> String {

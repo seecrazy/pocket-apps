@@ -49,3 +49,32 @@ final class CheckInRecordModel {
         self.note = note
     }
 }
+
+@Model
+final class SafetyContactModel {
+    var id: UUID
+    var name: String
+    var phone: String
+    var relationship: String
+    var notes: String?
+    var isPrimary: Bool
+    var createdAt: Date
+
+    init(
+        id: UUID = UUID(),
+        name: String,
+        phone: String,
+        relationship: String = "守护联系人",
+        notes: String? = nil,
+        isPrimary: Bool = false,
+        createdAt: Date = Date()
+    ) {
+        self.id = id
+        self.name = name
+        self.phone = phone
+        self.relationship = relationship
+        self.notes = notes
+        self.isPrimary = isPrimary
+        self.createdAt = createdAt
+    }
+}

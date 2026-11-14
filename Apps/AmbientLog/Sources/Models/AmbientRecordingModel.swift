@@ -8,6 +8,7 @@ final class AmbientRecordingModel {
     var category: String
     var startedAt: Date
     var duration: TimeInterval
+    var levels: [Double]
     var fileURLString: String
 
     init(
@@ -16,6 +17,7 @@ final class AmbientRecordingModel {
         category: String = "自然",
         startedAt: Date,
         duration: TimeInterval,
+        levels: [Double] = [],
         fileURLString: String
     ) {
         self.id = id
@@ -23,6 +25,7 @@ final class AmbientRecordingModel {
         self.category = category
         self.startedAt = startedAt
         self.duration = duration
+        self.levels = levels
         self.fileURLString = fileURLString
     }
 

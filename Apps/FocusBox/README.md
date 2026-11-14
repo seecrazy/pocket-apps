@@ -5,12 +5,19 @@
   <img alt="SwiftUI" src="https://img.shields.io/badge/UI-SwiftUI-32ADE6">
   <img alt="SwiftData" src="https://img.shields.io/badge/Data-SwiftData-0A84FF">
   <img alt="Status" src="https://img.shields.io/badge/release_ready_in_repo-34C759">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.1.0-8E8E93">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.2.0-8E8E93">
 </p>
 
 > 为一段真实专注记录意图、时长和趋势。
 
 FocusBox 不强制锁机，也不读取屏幕使用记录。它用一个明确的专注意图、可靠的倒计时和本机统计，帮助用户把注意力从“焦虑地看时间”转回“现在做什么”。
+
+## v1.2 更新
+
+- 新增暂停 / 恢复，暂停时长会从专注计时中扣除。
+- 倒计时改用真实时间计算，切屏、锁屏或 App 被回收后按实际时间恢复。
+- 新增“关闭 / App 内锁定”两档配置。
+- App 内锁定提供全屏专注页，不是系统级 Screen Time 锁机。
 
 ## 目录
 
@@ -96,7 +103,7 @@ IOS_SIMULATOR_NAME="iPhone 17" ./scripts/test_apps.sh
 
 ## 发布状态
 
-v1.1 工程内可发布。发布前在根目录执行：
+v1.2 工程内可发布。发布前在根目录执行：
 
 ```bash
 ./scripts/release_preflight.sh

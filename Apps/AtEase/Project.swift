@@ -6,7 +6,7 @@ let metadata = AppMetadata(
     displayName: "At Ease",
     subtitle: "冥想 · 呼吸 · 助眠",
     bundleID: "com.pocketapps.atease",
-    version: "0.3.0",
+    version: "0.4.0",
     buildNumber: 1
 )
 

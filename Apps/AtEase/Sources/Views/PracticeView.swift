@@ -6,12 +6,14 @@ import SwiftUI
 struct PracticeView: View {
     let hapticsEnabled: Bool
     let defaultMinutes: Int
+    @State private var activeMeditation: MeditationContentItem?
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AtEaseDesignTokens.sectionSpacing) {
                 breathingSection
                 timerSection
+                MeditationLibrarySection(hapticsEnabled: hapticsEnabled, activeItem: $activeMeditation)
                 futureSection
             }
             .padding(.horizontal, AtEaseDesignTokens.pagePadding)
@@ -20,6 +22,9 @@ struct PracticeView: View {
         }
         .background(AtEaseDesignTokens.canvas)
         .navigationTitle("练习")
+        .fullScreenCover(item: $activeMeditation) { item in
+            MeditationPlayerView(item: item)
+        }
         .navigationBarTitleDisplayMode(.large)
     }
 
@@ -140,7 +145,6 @@ struct PracticeView: View {
             .buttonStyle(.plain)
 
             CardContainer {
-                SettingRow(systemImage: "waveform", title: "引导冥想", detail: "精选中文导师内容，后续开放")
                 SettingRow(systemImage: "moon.stars", title: "睡眠故事", detail: "订阅内容，暂未开放")
             }
             .background(Color.white.opacity(0.35), in: .rect(cornerRadius: 16))

@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    {
+      "id": "micro-rest-60",
+      "title": "一分钟微休息",
+      "subtitle": "短暂停顿，回到当下",
+      "teacher": "At Ease 原型引导",
+      "theme": "reset",
+      "durationSeconds": 60,
+      "audioKind": "scripted",
+      "isSubscriptionRequired": false,
+      "steps": [
+        { "id": "settle", "title": "安顿", "text": "坐稳，让肩膀放松。", "durationSeconds": 20, "hapticEnabled": true },
+        { "id": "breathe", "title": "呼吸", "text": "注意一次完整的呼吸。", "durationSeconds": 20, "hapticEnabled": true },
+        { "id": "return", "title": "回来", "text": "轻轻回到你正在做的事。", "durationSeconds": 20, "hapticEnabled": false }
+      ]
+    },
+    {
+      "id": "meeting-reset-180",
+      "title": "会议前三分钟重置",
+      "subtitle": "降低紧张，回到清晰",
+      "teacher": "At Ease 原型引导",
+      "theme": "focus",
+      "durationSeconds": 180,
+      "audioKind": "scripted",
+      "isSubscriptionRequired": false,
+      "steps": [
+        { "id": "arrive", "title": "落座", "text": "双脚落地，感受支撑。", "durationSeconds": 45, "hapticEnabled": true },
+        { "id": "breathe", "title": "呼吸", "text": "呼气比吸气稍长一点。", "durationSeconds": 60, "hapticEnabled": true },
+        { "id": "body", "title": "身体", "text": "松开下颌和肩膀。", "durationSeconds": 45, "hapticEnabled": false },
+        { "id": "intention", "title": "意图", "text": "只准备进入下一件事。", "durationSeconds": 30, "hapticEnabled": false }
+      ]
+    },
+    {
+      "id": "body-landing-300",
+      "title": "身体着陆",
+      "subtitle": "从头脑回到身体",
+      "teacher": "At Ease 原型引导",
+      "theme": "emotion",
+      "durationSeconds": 300,
+      "audioKind": "scripted",
+      "isSubscriptionRequired": false,
+      "steps": [
+        { "id": "ground", "title": "着陆", "text": "感受身体接触椅子的地方。", "durationSeconds": 60, "hapticEnabled": true },
+        { "id": "shoulders", "title": "肩颈", "text": "让肩颈慢慢下沉。", "durationSeconds": 60, "hapticEnabled": true },
+        { "id": "hands", "title": "手", "text": "留意手指的温度。", "durationSeconds": 60, "hapticEnabled": false },
+        { "id": "breath", "title": "呼吸", "text": "不改变呼吸，只观察。", "durationSeconds": 60, "hapticEnabled": true },
+        { "id": "close", "title": "收尾", "text": "把注意力轻轻带回房间。", "durationSeconds": 60, "hapticEnabled": false }
+      ]
+    },
+    {
+      "id": "midday-let-go-300",
+      "title": "午间放下",
+      "subtitle": "不把上午带回下午",
+      "teacher": "At Ease 原型引导",
+      "theme": "reset",
+      "durationSeconds": 300,
+      "audioKind": "scripted",
+      "isSubscriptionRequired": false,
+      "steps": [
+        { "id": "pause", "title": "停顿", "text": "先暂停，不做下一步。", "durationSeconds": 60, "hapticEnabled": true },
+        { "id": "notice", "title": "觉察", "text": "留意身体哪里还在用力。", "durationSeconds": 60, "hapticEnabled": false },
+        { "id": "release", "title": "放下", "text": "想象那些事退后一点。", "durationSeconds": 60, "hapticEnabled": true },
+        { "id": "breathe", "title": "呼吸", "text": "呼吸自然进出。", "durationSeconds": 60, "hapticEnabled": false },
+        { "id": "return", "title": "返回", "text": "轻一点地进入下午。", "durationSeconds": 60, "hapticEnabled": false }
+      ]
+    },
+    {
+      "id": "sleep-organize-480",
+      "title": "睡前整理",
+      "subtitle": "把一天轻轻放好",
+      "teacher": "At Ease 原型引导",
+      "theme": "sleep",
+      "durationSeconds": 480,
+      "audioKind": "scripted",
+      "isSubscriptionRequired": false,
+      "steps": [
+        { "id": "lie-down", "title": "躺下", "text": "让身体被床接住。", "durationSeconds": 90, "hapticEnabled": true },
+        { "id": "day", "title": "一天", "text": "让今天的画面变淡。", "durationSeconds": 90, "hapticEnabled": false },
+        { "id": "body", "title": "身体", "text": "从脚到头慢慢放松。", "durationSeconds": 90, "hapticEnabled": true },
+        { "id": "breath", "title": "呼吸", "text": "呼气时更轻一点。", "durationSeconds": 120, "hapticEnabled": false },
+        { "id": "rest", "title": "休息", "text": "不需要睡着，休息就好。", "durationSeconds": 90, "hapticEnabled": false }
+      ]
+    }
+  ]
+}

@@ -10,7 +10,7 @@ struct AtEaseBreathView: View {
     @StateObject private var audioGuide = AtEaseAudioGuide()
     @StateObject private var coreHaptics = CoreHapticsBreathGuide()
     @StateObject private var liveActivity = SystemBreathLiveActivityService()
-    @StateObject private var ambientMixer = AmbientSoundMixer()
+    @StateObject private var musicMixer = MeditationMusicMixer()
     @State private var healthWriter = HealthKitMindfulMinutesWriter()
     @State private var startedAt = Date()
     @State private var showsExitConfirmation = false
@@ -69,7 +69,7 @@ struct AtEaseBreathView: View {
 
                 Spacer()
 
-                AmbientSoundCard(mixer: ambientMixer)
+                MeditationMusicCard(mixer: musicMixer)
                     .padding(.horizontal, 24)
 
                 Spacer()
@@ -103,7 +103,7 @@ struct AtEaseBreathView: View {
         .onAppear {
             engine.hapticsEnabled = hapticsEnabled
             engine.start()
-            ambientMixer.startDefaultAmbience(for: .emotion)
+            musicMixer.start()
             if hapticsEnabled {
                 coreHaptics.prepare()
                 coreHaptics.play(phase: engine.phase)
@@ -122,7 +122,7 @@ struct AtEaseBreathView: View {
         }
         .onDisappear {
             engine.stop()
-            ambientMixer.stop()
+            musicMixer.stop()
             liveActivity.end(elapsedSeconds: engine.elapsedSeconds)
         }
         .onChange(of: engine.phase) { _, phase in

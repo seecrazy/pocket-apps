@@ -1004,6 +1004,36 @@ voice-timer-start.mp3
 voice-timer-finish.mp3
 ```
 
+## 7.10 音频边界修正
+
+### 目标
+
+- 修复练习页自然音列表覆盖操作按钮的问题。
+- 明确自然音只属于自由计时器。
+- 引导冥想与呼吸练习改用冥想音乐。
+- 自然音不再使用 DSP 合成，改用 Wikimedia Commons 的免费音频素材。
+
+### 边界
+
+| 音频类型 | 允许场景 | 禁止场景 |
+|---|---|---|
+| 自然音 | 自由计时器 | 引导冥想、呼吸练习 |
+| 冥想音乐 | 引导冥想、呼吸练习 | 自由计时器 |
+| Tencent TTS 语音 | 引导冥想、呼吸阶段、计时开始/结束 | 不用于自然音 |
+
+### 交互
+
+1. 练习页使用单行 `MeditationMusicCard`，只显示当前音乐、选择入口和播放/暂停。
+2. 自然音卡片默认收起；展开后内部滚动，高度受限。
+3. 自然音卡片不在练习页出现。
+
+### 素材来源
+
+- 自然音：Wikimedia Commons 免费音频，转换为 M4A / AAC。
+- 冥想音乐：Wikimedia Commons 免费音乐，转换为 M4A / AAC。
+- 引导语音：Tencent Cloud TTS 生成 MP3。
+- 完整版权与来源记录见 `Apps/AtEase/docs/AUDIO.md` 与资源目录内的 `ATTRIBUTIONS.md`。
+
 ## 8. 技术架构
 
 - iOS 17+
@@ -1020,7 +1050,8 @@ voice-timer-finish.mp3
 - MeditationContentAccessService 内容访问判定
 - BGTaskScheduler 后续实现
 - UIBackgroundModes audio 后台冥想音频
-- AmbientBufferFactory 多层自然音景合成
+- AmbientSoundMixer 播放免费自然音素材
+- MeditationMusicMixer 播放免费冥想音乐素材
 - Tencent Cloud TTS build-time voice generation
 
 当前 v1.0 已支持仓库内发布就绪：可选预下载、缓存联动、后台音频、隐私声明、无障碍与发布门槛；真实资产、商店产品和签名仍需外部账号配置。

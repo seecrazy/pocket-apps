@@ -68,11 +68,11 @@ final class ReleaseReadinessTests: XCTestCase {
         )
     }
 
-    func testReleaseVersionIsOneOne() throws {
+    func testReleaseVersionIsOneTwo() throws {
         let infoDictionary = try XCTUnwrap(Bundle.main.infoDictionary)
         XCTAssertEqual(
             infoDictionary["CFBundleShortVersionString"] as? String,
-            "1.1.0"
+            "1.2.0"
         )
     }
 }

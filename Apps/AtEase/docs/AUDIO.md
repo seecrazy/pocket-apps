@@ -4,26 +4,36 @@
 
 At Ease 的音频分成三类：
 
-1. **自然音景**：App 内 DSP 实时合成。
+1. **自然音景**：仅自由计时器使用，来自 Wikimedia Commons 的免费音频素材。
 2. **引导语音**：优先播放 Tencent Cloud TTS 生成本地 MP3；若文件缺失，回退到 iOS 中文语音。
+3. **冥想音乐**：仅引导冥想和呼吸练习使用，来自 Wikimedia Commons 的免费音乐素材。
 3. **远程订阅音频**：从 HTTPS CDN 下载后本地播放。
 
 ### 自然音景来源
 
-此前版本的雨声、流水声、虫鸣是最简单的正弦波加白噪声原型。v1.1 已替换为基于粉噪、棕噪、包络、随机雨滴、潮汐起伏和鸟鸣层的 DSP 合成模型。
+自然音仅用于自由计时器，不在引导冥想或呼吸练习中出现。当前 6 种自然音已从 Wikimedia Commons 下载并转换为 iOS 兼容的 M4A / AAC 格式：
 
-当前 6 种免费音景：
+| 音景 | 原始素材 | 作者 | 许可证 |
+|---|---|---|---|
+| 雨声 | [Sound of rain.ogg](https://commons.wikimedia.org/wiki/File:Sound_of_rain.ogg) | Effib | CC BY-SA 3.0 |
+| 流水 | [Sound Effects - The sound of a small stream.ogg](https://commons.wikimedia.org/wiki/File:Sound_Effects_-_The_sound_of_a_small_stream.ogg) | Amada44 | CC BY-SA 4.0 |
+| 虫鸣 | [Cicada sound.ogg](https://commons.wikimedia.org/wiki/File:Cicada_sound.ogg) | Schwiki | CC BY-SA 4.0 |
+| 海浪 | [Oceanwavescrushing.ogg](https://commons.wikimedia.org/wiki/File:Oceanwavescrushing.ogg) | Luftrum | CC BY 3.0 |
+| 森林 | [Forest ambience 2 (Gravity Sound).wav](https://commons.wikimedia.org/wiki/File:Forest_ambience_2_(Gravity_Sound).wav) | Gravity Sound | CC BY 4.0 |
+| 风声 | [Wind rustling (Gravity Sound).mp3](https://commons.wikimedia.org/wiki/File:Wind_rustling_(Gravity_Sound).mp3) | Gravity Sound | CC BY 4.0 |
 
-| 音景 | 合成模型 | 作用 |
-|---|---|---|
-| 雨声 | 粉噪 + 雨滴脉冲 | 安全感、情绪回落 |
-| 流水 | 粉噪 + 水流调制 | 稳定、专注 |
-| 虫鸣 | 周期鸣叫 + 夜间低噪 | 夜间放松 |
-| 海浪 | 棕噪 + 11 秒潮汐包络 | 睡前呼吸节奏 |
-| 森林 | 树冠粉噪 + 稀疏鸟鸣 | 白天练习、降低压迫感 |
-| 风声 | 棕噪 + 14 秒阵风包络 | 低侵入环境音 |
+完整版权信息在 `Apps/AtEase/Resources/Sounds/SOUNDS-ATTRIBUTIONS.md`。
 
-选择本地合成而非直接分发录音素材，是为了避免第三方素材授权、Content ID 和二次分发风险。所有音景可离线使用。
+### 冥想音乐来源
+
+引导冥想和呼吸练习使用独立的冥想音乐，不再使用自然音。当前使用 Wikimedia Commons 上的免费音乐素材：
+
+| 音乐 | 原始素材 | 作者 | 许可证 |
+|---|---|---|---|
+| 平静铺底 | [Placid Ambient by MusicLFiles.ogg](https://commons.wikimedia.org/wiki/File:Placid_Ambient_by_MusicLFiles.ogg) | MusicLFiles | CC BY 4.0 |
+| 温润氛围 | [Spiritual Ambient by MusicLFiles.ogg](https://commons.wikimedia.org/wiki/File:Spiritual_Ambient_by_MusicLFiles.ogg) | MusicLFiles | CC BY 4.0 |
+
+完整版权信息在 `Apps/AtEase/Resources/Music/MUSIC-ATTRIBUTIONS.md`。
 
 ### 引导语音
 
@@ -96,14 +106,13 @@ TENCENT_CLOUD_SECRET_ID / TENCENT_CLOUD_SECRET_KEY
 python3 scripts/generate_at_ease_tts.py --dry-run
 ```
 
-## 添加新的自然音景
+## 音频边界
 
-新增音景需要同时更新：
-
-1. `AmbientSound`
-2. `AmbientSoundLevel`
-3. `AmbientBufferFactory`
-4. `AmbientSoundCard`
+1. 自然音只允许出现在自由计时器。
+2. 引导冥想与呼吸练习只使用冥想音乐。
+3. 自然音卡片默认收起，展开时内部滚动，不覆盖操作按钮。
+4. 新增自然音时更新 `AmbientSound`、`AmbientSoundLevel`、`AmbientSoundMixer` 与 `AmbientSoundCard`。
+5. 新增冥想音乐时更新 `MeditationMusic`、`MeditationMusicMixer` 与 `MeditationMusicCard`。
 
 ### 音量约束
 

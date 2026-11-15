@@ -4,13 +4,13 @@
   <img alt="iOS" src="https://img.shields.io/badge/iOS-17%2B-0A84FF">
   <img alt="SwiftUI" src="https://img.shields.io/badge/UI-SwiftUI-32ADE6">
   <img alt="SwiftData" src="https://img.shields.io/badge/Data-SwiftData-0A84FF">
-  <img alt="Version" src="https://img.shields.io/badge/Version-1.0.0-8E8E93">
-  <img alt="Status" src="https://img.shields.io/badge/Status-Release_Ready_In_Repo-34C759">
+  <img alt="Version" src="https://img.shields.io/badge/Version-1.1.0-8E8E93">
+  <img alt="Status" src="https://img.shields.io/badge/Status-Natural_Sound_Upgrade-34C759">
 </p>
 
 > 每天一分钟，心安一下。
 
-At Ease 是一款低门槛、不制造压力的极简冥想 App。当前版本完成呼吸、计时器、情绪签到、非声音练习、系统级触觉/健康/锁屏集成、5 条免费引导冥想、3 条订阅深度内容原型、订阅状态驱动的内容解锁、远程音频离线播放底座、音频缓存管理、可选顺序预下载，以及 v1.0 发布就绪检查。
+At Ease 是一款低门槛、不制造压力的极简冥想 App。当前版本完成呼吸、计时器、情绪签到、非声音练习、系统级触觉/健康/锁屏集成、5 条免费引导冥想、3 条订阅深度内容原型、订阅状态驱动的内容解锁、远程音频离线播放底座、音频缓存管理、可选顺序预下载、多层自然音景，以及 Tencent TTS 音频优先级。
 
 ## 目录
 
@@ -61,12 +61,12 @@ open PocketApps.xcworkspace
 - 基于情绪的 3 张推荐卡片。
 - 引导呼吸：4-7-8、箱式呼吸、1 分钟 SOS。
 - 呼吸圆环、阶段文字、可选中文语音和 Core Haptics 阶段触觉。
-- 自由计时器：1–60 分钟，可叠加雨声、流水、虫鸣。
+- 自由计时器：1–60 分钟，可叠加雨声、流水、虫鸣、海浪、森林和风声。
 
 ### 非声音练习
 - 念头放下：输入烦恼，长按让文字随涟漪淡出。
 - 触摸身体扫描：线性人体轮廓 + 分区触觉反馈。
-- 环境音混音：三种本地音景可分别调节音量，预设保存在本机。
+- 环境音混音：六种本地音景可分别调节音量，预设保存在本机。
 
 ### 引导冥想（v0.4）
 - 5 条免费短练习：1 分钟微休息、3 分钟会议前重置、5 分钟身体着陆、5 分钟午间放下、8 分钟睡前整理。
@@ -134,6 +134,16 @@ open PocketApps.xcworkspace
 - 新增 release audit 测试：隐私清单、后台音频、订阅产品 ID、无占位 URL 与版本号。
 - 新增 [App Store 发布门槛](docs/APP_STORE.md)，明确仓库外签名、订阅、资产、截图与 TestFlight 步骤。
 
+### 自然音景与 Tencent TTS（v1.1）
+- 自然音景从 3 种升级为 6 种：雨声、流水、虫鸣、海浪、森林、风声。
+- 使用粉噪、棕噪、包络、雨滴脉冲、潮汐起伏和稀疏鸟鸣分层合成。
+- 循环缓冲加入 80ms 交叉淡化，避免环境音循环爆音。
+- 引导冥想默认叠加 0.22 音量的背景音景，可随时调节或关闭。
+- 呼吸练习默认叠加低音量背景音景。
+- 引导语音优先查找 Tencent Cloud TTS 预生成的本地 MP3。
+- 找不到 Tencent 音频时回退到 iOS 中文语音，练习不中断。
+- 新增 `scripts/generate_at_ease_tts.py`，凭据只从本机环境或 `~/.zshrc` 读取。
+
 ## 体验架构
 
 ```text
@@ -181,7 +191,7 @@ App 启动
 - 设计令牌：暖灰画布、近黑呼吸页、雾蓝强调、五级情绪色
 - 订阅：StoreKit 2、可注入 provider、UserDefaults 状态缓存、内容分层
 
-完整产品与 UI 设计见 [docs/DESIGN.md](docs/DESIGN.md)。
+完整产品与 UI 设计见 [docs/DESIGN.md](docs/DESIGN.md)，声音实现见 [docs/AUDIO.md](docs/AUDIO.md)。
 
 ## 测试
 
@@ -213,6 +223,8 @@ At Ease 当前覆盖点：
 - 音频缓存列表、下载、删除、清理全部。
 - 可选预下载的权限过滤、失败继续、取消与已下载跳过。
 - 隐私清单、后台音频、订阅产品 ID 与无占位远程 URL。
+- 6 种自然音景、循环能量与旧预设兼容。
+- Tencent TTS 音频命名与缺失文件回退。
 
 ## Roadmap
 
@@ -227,9 +239,11 @@ At Ease 当前覆盖点：
 - `v0.8`：离线音频管理页、缓存大小、删除单条、清理全部。
 - `v0.9`：App 级缓存状态、可选顺序预下载、取消、列表离线状态。
 - `v1.0`：后台音频、无障碍、隐私审计与发布门槛。
+- `v1.1`：6 种自然音景、默认背景音景、Tencent TTS 音频优先。
 
 ### 下一步
 - 按照 [App Store 发布门槛](docs/APP_STORE.md) 配置签名、订阅、音频资产、截图与 TestFlight。
+- 运行 Tencent TTS 脚本生成正式引导语音资产。
 - 接入正式导师音频、睡眠故事、完整多周课程、OS 级后台预下载与 CDN 分发。
 
 发布原则：
@@ -243,6 +257,7 @@ At Ease 当前覆盖点：
 
 - 设计文档：[docs/DESIGN.md](docs/DESIGN.md)
 - 进度文档：[docs/PROGRESS.md](docs/PROGRESS.md)
+- 声音架构：[docs/AUDIO.md](docs/AUDIO.md)
 - App Store 发布门槛：[docs/APP_STORE.md](docs/APP_STORE.md)
 - 仓库设计：[../../docs/DESIGN.md](../../docs/DESIGN.md)
 - 隐私说明：[../../PRIVACY.md](../../PRIVACY.md)

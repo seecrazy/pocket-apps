@@ -13,7 +13,7 @@ struct AmbientSoundCard: View {
                         .font(.headline.weight(.medium))
                         .foregroundStyle(AtEaseDesignTokens.textPrimary)
                     Spacer()
-                    Text("免费 3 种")
+                    Text("免费 6 种")
                         .font(.caption)
                         .foregroundStyle(AtEaseDesignTokens.textSecondary)
                 }
@@ -58,6 +58,9 @@ struct AmbientSoundCard: View {
         case .rain: return mixer.levels.rain
         case .stream: return mixer.levels.stream
         case .insects: return mixer.levels.insects
+        case .ocean: return mixer.levels.ocean
+        case .forest: return mixer.levels.forest
+        case .wind: return mixer.levels.wind
         }
     }
 }

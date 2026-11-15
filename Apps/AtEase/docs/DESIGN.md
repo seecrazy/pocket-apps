@@ -920,6 +920,80 @@ App target 增加：
 5. App Store 截图与隐私问卷提交。
 6. TestFlight 冒烟验证。
 
+## 7.9 v1.1 自然音景与 Tencent TTS
+
+### 目标
+
+- 将低质量环境音原型升级为多层 DSP 自然音景。
+- 自然音景从 3 种扩展到 6 种。
+- 引导冥想和呼吸默认叠加低音量背景音景，用户可随时调节或关闭。
+- 引导语音优先使用 Tencent Cloud TTS 预生成的本地音频。
+- 生成凭据只存在于本机 shell 环境或 `~/.zshrc`，不进入仓库或 App Bundle。
+
+### 非目标
+
+- 不在 App 内保存 Tencent Secret Key。
+- 不把用户练习文本实时上传到云服务。
+- 不使用第三方录音素材，避免授权与 Content ID 风险。
+- 不强制背景音景；用户可以调节到静音。
+
+### 自然音景
+
+| 音景 | 模型 | 场景 |
+|---|---|---|
+| 雨声 | 粉噪 + 雨滴脉冲 | 情绪回落 |
+| 流水 | 粉噪 + 水流调制 | 专注、重置 |
+| 虫鸣 | 周期鸣叫 + 夜间低噪 | 夜间 |
+| 海浪 | 棕噪 + 11 秒潮汐包络 | 睡前 |
+| 森林 | 树冠粉噪 + 稀疏鸟鸣 | 白天 |
+| 风声 | 棕噪 + 14 秒阵风包络 | 低侵入背景 |
+
+合成约束：
+
+1. 使用 44.1kHz PCM buffer。
+2. 使用确定性伪随机与粉噪/棕噪滤波。
+3. 循环缓冲做 80ms 交叉淡化。
+4. 音量默认 0.22。
+5. 所有样本限制在 ±1 内。
+
+### 引导练习背景音
+
+| 练习主题 | 默认音景 |
+|---|---|
+| 专注 | 流水 |
+| 重置 | 流水 |
+| 情绪 | 雨声 |
+| 睡前 | 海浪 |
+
+呼吸页默认使用雨声。播放页显示 `AmbientSoundCard`，可关闭或切换音景。
+
+### Tencent TTS
+
+新增 `scripts/generate_at_ease_tts.py`：
+
+- 使用 Tencent Cloud `tts.tencentcloudapi.com`。
+- 使用 TC3-HMAC-SHA256 签名。
+- 读取 `TENCENT_SECRET_ID` / `TENCENT_SECRET_KEY`。
+- 同时兼容 `TENCENT_TTS_*` 和 `TENCENT_CLOUD_*` 前缀。
+- 从 bundled `ContentCatalog.json` 生成全部步骤语音。
+- 输出到 `Apps/AtEase/Resources/Voice/`。
+
+App 侧优先级：
+
+1. Tencent TTS 生成的 MP3。
+2. `AVSpeechSynthesizer` 中文回退。
+
+文件命名：
+
+```text
+voice-<contentID>-<stepID>.mp3
+voice-breath-inhale.mp3
+voice-breath-hold.mp3
+voice-breath-exhale.mp3
+voice-timer-start.mp3
+voice-timer-finish.mp3
+```
+
 ## 8. 技术架构
 
 - iOS 17+
@@ -936,6 +1010,8 @@ App target 增加：
 - MeditationContentAccessService 内容访问判定
 - BGTaskScheduler 后续实现
 - UIBackgroundModes audio 后台冥想音频
+- AmbientBufferFactory 多层自然音景合成
+- Tencent Cloud TTS build-time voice generation
 
 当前 v1.0 已支持仓库内发布就绪：可选预下载、缓存联动、后台音频、隐私声明、无障碍与发布门槛；真实资产、商店产品和签名仍需外部账号配置。
 
@@ -967,6 +1043,7 @@ At Ease 按六个阶段推进，避免一开始做成内容库：
 | `0.9` | 可选预下载与状态联动 | 共享缓存状态、可选顺序预下载、取消、列表离线状态 |
 | `1.0` | 公开发布准备 | 后台音频、隐私声明、无障碍、release audit、发布门槛 |
 | `1.0` | 公开发布 | 稳定性、无障碍、合规、截图、TestFlight 与审核 |
+| `1.1` | 自然音景与语音升级 | 6 种 DSP 音景、默认背景音景、Tencent TTS 音频优先 |
 
 版本推进约束：
 
@@ -1000,6 +1077,9 @@ At Ease 按六个阶段推进，避免一开始做成内容库：
 | 后台音频 | UIBackgroundModes audio、播放会话激活 | ✅ |
 | 无障碍 | 图标操作标签、内容语义标签、缓存操作语义 | ✅ |
 | 发布就绪 | privacy audit、无占位 URL、元数据与 fastlane 路径 | ✅ |
+| 自然音景 | 6 种多层 DSP 合成、循环淡化、默认低音量 | ✅ |
+| 背景音景 | 引导冥想与呼吸默认叠加，可调节关闭 | ✅ |
+| Tencent TTS | build-time 脚本、本地音频优先、系统语音回退 | ✅ |
 
 ## 12. 验收清单
 
@@ -1050,3 +1130,7 @@ At Ease 按六个阶段推进，避免一开始做成内容库：
 - [x] release preflight 与 release audit 测试通过。
 - [x] 单元测试通过。
 - [x] 无第三方运行时依赖。
+- [x] 6 种自然音景可在离线状态使用。
+- [x] 引导冥想默认叠加低音量背景音景。
+- [x] 引导语音优先查找 Tencent TTS 音频。
+- [x] Tencent TTS 生成脚本不把凭据写入仓库。

@@ -10,6 +10,7 @@ struct MeditationPlayerView: View {
     @StateObject private var player: MeditationScriptPlayer
     @StateObject private var audioGuide = AtEaseAudioGuide()
     @StateObject private var audioPreparation: MeditationAudioPreparationService
+    @StateObject private var ambientMixer = AmbientSoundMixer()
     @State private var startedAt = Date()
     @State private var hapticPlayer: any AtEaseHapticPlayer = SystemAtEaseHapticPlayer()
     @State private var showSubscriptionEntry = false
@@ -112,6 +113,11 @@ struct MeditationPlayerView: View {
 
                 Spacer()
 
+                AmbientSoundCard(mixer: ambientMixer)
+                    .padding(.horizontal, AtEaseDesignTokens.pagePadding)
+
+                Spacer()
+
                 HStack(spacing: 32) {
                     if isPreparingAudio {
                         ProgressView()
@@ -173,10 +179,15 @@ struct MeditationPlayerView: View {
 
             player.voiceEnabled = voiceGuidanceEnabled
             player.start()
+            ambientMixer.startDefaultAmbience(for: item.theme)
         }
         .onChange(of: player.playbackStep?.id) { _, _ in
             guard voiceGuidanceEnabled, let step = player.playbackStep else { return }
-            audioGuide.speak("\(step.title)。\(step.text)")
+            audioGuide.speak(
+                contentID: item.id,
+                stepID: step.id,
+                fallbackText: "\(step.title)。\(step.text)"
+            )
             if step.hapticEnabled {
                 hapticPlayer.phaseChange()
             }
@@ -185,6 +196,7 @@ struct MeditationPlayerView: View {
             if status == .completed {
                 saveProgress()
                 audioPreparation.stop()
+                ambientMixer.stop()
             }
         }
         .sheet(isPresented: $showSubscription) {
@@ -195,6 +207,7 @@ struct MeditationPlayerView: View {
         .onDisappear {
             player.stop()
             audioPreparation.stop()
+            ambientMixer.stop()
         }
     }
 

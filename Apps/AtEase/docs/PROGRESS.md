@@ -1,12 +1,12 @@
 # At Ease 进度文档
 
-> 当前版本：1.0.0
-> 状态：仓库内发布就绪；等待开发者账号、App Store Connect 订阅、正式音频资产与签名
+> 当前版本：1.1.0
+> 状态：自然音景升级完成；等待开发者账号、Tencent TTS 资产生成、App Store Connect 订阅与签名
 > 最后更新：2026-11-15
 
 ## 当前摘要
 
-At Ease 已完成 v0.1–v1.0 的仓库内发布路径：无登录呼吸/计时、情绪签到、本地进度、可选语音、Core Haptics、HealthKit、Live Activity、非声音练习、环境音混音、5 条免费结构化引导冥想、StoreKit 2 订阅底座、3 条订阅深度内容原型的锁定 / 解锁分发、远程音频下载与离线播放底座、音频缓存管理、可选顺序预下载、后台音频、无障碍标签、隐私审计与 App Store 发布门槛。正式订阅音频、CDN、订阅产品配置和 TestFlight 发布仍需外部账号资源。
+At Ease 已完成 v0.1–v1.1 的仓库内发布路径：无登录呼吸/计时、情绪签到、本地进度、可选语音、Core Haptics、HealthKit、Live Activity、非声音练习、多层环境音、5 条免费结构化引导冥想、StoreKit 2 订阅底座、3 条订阅深度内容原型的锁定 / 解锁分发、远程音频下载与离线播放底座、音频缓存管理、可选顺序预下载、后台音频、无障碍标签、隐私审计、App Store 发布门槛与 Tencent TTS 音频优先级。正式订阅音频、CDN、订阅产品配置和 TestFlight 发布仍需外部账号资源。
 
 ## 已完成
 
@@ -188,6 +188,37 @@ At Ease 已完成 v0.1–v1.0 的仓库内发布路径：无登录呼吸/计时�
 - [x] 新增 `docs/APP_STORE.md` 发布门槛。
 - [x] 根隐私文档补充 At Ease 与后台音频、HealthKit。
 
+### v1.1 — 自然音景与 Tencent TTS
+
+- [x] 环境音从 3 种扩展到 6 种：雨声、流水、虫鸣、海浪、森林、风声。
+- [x] 移除逐样本随机噪声原型。
+- [x] 使用确定性伪随机、粉噪、棕噪、包络与多层调制合成。
+- [x] 雨声加入雨滴脉冲层。
+- [x] 海浪加入 11 秒潮汐包络。
+- [x] 森林加入树冠粉噪与稀疏鸟鸣层。
+- [x] 风声加入 14 秒阵风包络。
+- [x] 循环缓冲加入 80ms 交叉淡化，减少循环爆音。
+- [x] `AmbientSoundLevel` 兼容旧版 3 音景预设。
+- [x] 引导冥想按主题默认叠加低音量背景音景。
+- [x] 呼吸练习默认叠加雨声背景音景。
+- [x] 引导冥想播放页加入环境音混音卡。
+- [x] 呼吸页加入环境音混音卡。
+- [x] 播放结束或离开页面停止背景音景。
+- [x] 新增 `AtEaseVoiceLocator`，按 Tencent TTS 音频命名查找本地语音。
+- [x] `AtEaseAudioGuide` 优先播放 Tencent TTS 生成的 MP3。
+- [x] 缺失 Tencent 音频时回退到 iOS 中文语音。
+- [x] 引导冥想步骤语音按 `contentID + stepID` 查找。
+- [x] 呼吸吸气 / 屏息 / 呼气语音按固定资源名查找。
+- [x] 计时开始 / 结束语音按固定资源名查找。
+- [x] 新增 `scripts/generate_at_ease_tts.py`。
+- [x] 脚本使用 Tencent Cloud TC3-HMAC-SHA256 签名。
+- [x] 脚本从环境或 `~/.zshrc` 读取凭据，不写入仓库。
+- [x] 脚本从 `ContentCatalog.json` 生成全部步骤语音。
+- [x] 新增环境音能量、边界、新音景与旧预设兼容测试。
+- [x] 新增语音资源命名与缺失回退测试。
+- [ ] 运行 Tencent TTS 脚本生成实际 MP3；本机当前未发现 `TENCENT_SECRET_ID` / `TENCENT_SECRET_KEY`。
+- [ ] 真机听感回归：雨声、海浪、森林和风声长时间播放。
+
 ### 发布前
 
 - [ ] 真机验证 Core Haptics、HealthKit、Live Activity。
@@ -210,13 +241,14 @@ At Ease 已完成 v0.1–v1.0 的仓库内发布路径：无登录呼吸/计时�
 | `0.9` | 可选预下载与状态联动 | ✅ 已完成 |
 | `1.0` | 发布就绪 | ✅ 仓库内完成；签名/订阅/资产待外部配置 |
 | `1.0` | 公开发布 | ⏳ |
+| `1.1` | 自然音景与 Tencent TTS | ✅ 代码完成；TTS MP3 待生成 |
 
 ## 验证状态
 
 最近一次 At Ease 单元测试：
 
 ```text
-Executed 60 tests, with 0 failures
+Executed 66 tests, with 0 failures
 ** TEST SUCCEEDED **
 ```
 

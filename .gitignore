@@ -16,3 +16,5 @@ fastlane/test_output
 *.dSYM.zip
 .env
 .env.*
+__pycache__/
+*.pyc

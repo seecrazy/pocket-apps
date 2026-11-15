@@ -5,16 +5,70 @@ import Foundation
 final class AtEaseAudioGuide: NSObject, ObservableObject {
     private let synthesizer = AVSpeechSynthesizer()
     private let session = AVAudioSession.sharedInstance()
+    private var audioPlayer: AVAudioPlayer?
 
     override init() {
         super.init()
         synthesizer.delegate = self
     }
 
-    func speak(_ text: String) {
+    func speak(_ text: String, assetName: String? = nil) {
+        if let assetName, let url = AtEaseVoiceLocator.url(forAsset: assetName) {
+            playTTS(url: url, fallbackText: text)
+            return
+        }
+        synthesize(text)
+    }
+
+    func speak(
+        contentID: String,
+        stepID: String,
+        fallbackText: String
+    ) {
+        if let url = AtEaseVoiceLocator.url(
+            forContentID: contentID,
+            stepID: stepID
+        ) {
+            playTTS(url: url, fallbackText: fallbackText)
+            return
+        }
+        synthesize(fallbackText)
+    }
+
+    func phase(_ phase: BreathingPhase) {
+        speak(phase.title, assetName: AtEaseVoiceLocator.assetName(for: phase))
+    }
+
+    func startTimer() {
+        speak("开始", assetName: "voice-timer-start")
+    }
+
+    func finish() {
+        speak("练习结束", assetName: "voice-timer-finish")
+    }
+
+    private func playTTS(url: URL, fallbackText: String) {
         configureAudioSession()
 
-        synthesizer.stopSpeaking(at: .immediate)
+        stopSpeaking()
+        do {
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.prepareToPlay()
+            player.volume = 0.78
+            guard player.play() else {
+                synthesize(fallbackText)
+                return
+            }
+            audioPlayer = player
+        } catch {
+            synthesize(fallbackText)
+        }
+    }
+
+    private func synthesize(_ text: String) {
+        configureAudioSession()
+        stopSpeaking()
+
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = AVSpeechSynthesisVoice(language: "zh-CN")
         utterance.rate = max(0.42, AVSpeechUtteranceDefaultSpeechRate - 0.05)
@@ -24,16 +78,10 @@ final class AtEaseAudioGuide: NSObject, ObservableObject {
         synthesizer.speak(utterance)
     }
 
-    func phase(_ phase: BreathingPhase) {
-        speak(phase.title)
-    }
-
-    func startTimer() {
-        speak("开始")
-    }
-
-    func finish() {
-        speak("练习结束")
+    private func stopSpeaking() {
+        audioPlayer?.stop()
+        audioPlayer = nil
+        synthesizer.stopSpeaking(at: .immediate)
     }
 
     private func configureAudioSession() {
@@ -51,9 +99,10 @@ final class AtEaseAudioGuide: NSObject, ObservableObject {
 }
 
 extension AtEaseAudioGuide: AVSpeechSynthesizerDelegate {
-    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-        Task { @MainActor in
-            try? session.setActive(false, options: [.notifyOthersOnDeactivation])
-        }
+    nonisolated func speechSynthesizer(
+        _ synthesizer: AVSpeechSynthesizer,
+        didFinish utterance: AVSpeechUtterance
+    ) {
+        // 保持会话活跃，避免后台音景被语音结束打断。
     }
 }

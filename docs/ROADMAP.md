@@ -163,9 +163,10 @@
 - [x] v0.8：离线音频管理页、缓存大小、单条删除、清理全部与订阅锁定规则。
 - [x] v0.9：App 级缓存状态、可选顺序预下载、取消与练习列表离线状态。
 - [x] v1.0：后台音频、隐私审计、无障碍标签、release audit 与 App Store 发布门槛。
+- [x] v1.1：6 种多层自然音景、引导练习背景音景、Tencent TTS 本地音频优先。
 - [ ] Core Haptics 真机精度验证。
 - [ ] HealthKit 授权状态与失败 UI。
-- [ ] 正式订阅内容音频资产、OS 级后台预下载、CDN 分发与 App Store Connect 订阅上架。
+- [ ] Tencent TTS 语音资产生成、正式订阅内容音频资产、OS 级后台预下载、CDN 分发与 App Store Connect 订阅上架。
 
 ### TabStash
 

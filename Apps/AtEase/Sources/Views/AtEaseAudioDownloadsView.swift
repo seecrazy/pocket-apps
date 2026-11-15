@@ -3,7 +3,7 @@ import SwiftUI
 
 struct AtEaseAudioDownloadsView: View {
     @EnvironmentObject private var subscription: AtEaseSubscriptionService
-    @StateObject private var manager = MeditationAudioDownloadManager(downloadService: ContentDownloadService())
+    @EnvironmentObject private var manager: MeditationAudioDownloadManager
 
     var body: some View {
         ScrollView {

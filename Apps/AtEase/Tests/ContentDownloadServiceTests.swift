@@ -75,16 +75,22 @@ final class MockContentDownloadService: ContentDownloadServicing {
     private let session: URLSession
     private let directory: URL
     private let shouldFail: Bool
+    private let failedContentIDs: Set<String>
     private(set) var downloadCount = 0
+    private let downloadDelayNanoseconds: UInt64
 
     init(
         session: URLSession = .shared,
         directory: URL = URL(fileURLWithPath: "/tmp/atease-mock-downloads"),
-        shouldFail: Bool = false
+        shouldFail: Bool = false,
+        failedContentIDs: Set<String> = [],
+        downloadDelayNanoseconds: UInt64 = 0
     ) {
         self.session = session
         self.directory = directory
         self.shouldFail = shouldFail
+        self.failedContentIDs = failedContentIDs
+        self.downloadDelayNanoseconds = downloadDelayNanoseconds
     }
 
     func localFileURL(for contentID: String, fileExtension: String) -> URL {
@@ -120,7 +126,10 @@ final class MockContentDownloadService: ContentDownloadServicing {
 
     func download(url: URL, contentID: String, fileExtension: String) async throws -> URL {
         downloadCount += 1
-        guard !shouldFail else {
+        if downloadDelayNanoseconds > 0 {
+            try? await Task.sleep(nanoseconds: downloadDelayNanoseconds)
+        }
+        guard !shouldFail, !failedContentIDs.contains(contentID) else {
             throw URLError(.notConnectedToInternet)
         }
 

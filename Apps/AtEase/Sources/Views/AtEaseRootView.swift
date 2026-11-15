@@ -7,10 +7,12 @@ struct AtEaseRootView: View {
     @AppStorage("atease.hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("atease.hapticsEnabled") private var hapticsEnabled = true
     @AppStorage("atease.defaultMinutes") private var defaultMinutes = 5
+    @AppStorage("atease.autoPredownloadEnabled") private var autoPredownloadEnabled = false
     @State private var selectedMood: Int?
     @State private var recommendationEngine = RecommendationEngine()
     @State private var hapticPlayer: any AtEaseHapticPlayer = SystemAtEaseHapticPlayer()
     @StateObject private var subscription = AtEaseSubscriptionService()
+    @StateObject private var audioDownloadManager = MeditationAudioDownloadManager(downloadService: ContentDownloadService())
 
     var body: some View {
         TabView {
@@ -53,8 +55,19 @@ struct AtEaseRootView: View {
         .scrollContentBackground(.hidden)
         .background(AtEaseDesignTokens.canvas)
         .environmentObject(subscription)
+        .environmentObject(audioDownloadManager)
         .task {
             await subscription.refresh()
+            if autoPredownloadEnabled {
+                await audioDownloadManager.predownloadUnlocked(isSubscribed: subscription.isSubscribed)
+            }
+        }
+        .onChange(of: subscription.isSubscribed) { _, subscribed in
+            if autoPredownloadEnabled {
+                Task {
+                    await audioDownloadManager.predownloadUnlocked(isSubscribed: subscribed)
+                }
+            }
         }
         .fullScreenCover(isPresented: Binding(
             get: { !hasCompletedOnboarding },

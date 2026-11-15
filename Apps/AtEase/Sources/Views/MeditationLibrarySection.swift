@@ -9,6 +9,7 @@ struct MeditationLibrarySection: View {
     @Binding var activeItem: MeditationContentItem?
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var subscription: AtEaseSubscriptionService
+    @EnvironmentObject private var audioDownloadManager: MeditationAudioDownloadManager
 
     @Query(sort: \GuidedContentStateModel.lastPlayedAt, order: .reverse) private var states: [GuidedContentStateModel]
     @State private var manifest: AtEaseContentManifest?
@@ -60,6 +61,8 @@ struct MeditationLibrarySection: View {
                             isFavorite: state(for: item)?.isFavorite ?? false,
                             hasCompleted: state(for: item)?.isCompleted ?? false,
                             isLocked: !accessService.canPlay(item, isSubscribed: isSubscribed),
+                            isAudioDownloaded: audioDownloadManager.isDownloaded(for: item),
+                            audioDownloadState: audioDownloadManager.state(for: item),
                             onToggleFavorite: { toggleFavorite(item) },
                             onPlay: {
                                 if accessService.canPlay(item, isSubscribed: isSubscribed) {
@@ -145,6 +148,8 @@ struct MeditationContentCard: View {
     let isFavorite: Bool
     let hasCompleted: Bool
     let isLocked: Bool
+    let isAudioDownloaded: Bool
+    let audioDownloadState: AudioDownloadItemState?
     let onToggleFavorite: () -> Void
     let onPlay: () -> Void
     let onSubscribe: () -> Void
@@ -172,6 +177,11 @@ struct MeditationContentCard: View {
                                     systemImage: "lock",
                                     tint: AtEaseDesignTokens.textSecondary
                                 )
+                            }
+                            if isAudioDownloaded {
+                                StatusBarChip(text: "已离线", systemImage: "internaldrive")
+                            } else if audioDownloadState == .downloading {
+                                StatusBarChip(text: "下载中", systemImage: "arrow.down.circle")
                             }
                         }
                     }

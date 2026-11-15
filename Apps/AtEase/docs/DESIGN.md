@@ -698,6 +698,130 @@ removeAllDownloads()
 - 清理全部后缓存总数归零。
 - 订阅过期后已缓存文件仍可见、可删除。
 
+## 7.7 v0.9 可选预下载与缓存状态联动
+
+### 目标与非目标
+
+目标：
+
+- 将音频缓存状态提升为 App 级共享状态。
+- 练习列表、播放器和离线音频管理页使用同一个 `MeditationAudioDownloadManager`。
+- remote 内容在练习列表中显示“已离线 / 下载中”状态。
+- 用户从播放器离开后，缓存状态自动刷新。
+- 提供可选“自动预下载”，默认关闭。
+- 开启后按顺序预下载当前可访问的 remote 音频，不并发请求。
+- 失败内容保持可重试状态，后续条目继续处理。
+- 预下载可取消。
+
+非目标：
+
+- 不使用 BGTaskScheduler 做 OS 级后台任务。
+- 不默认自动下载，避免消耗流量和存储。
+- 不下载用户当前无权限的订阅内容。
+- 不做并发队列和下载优先级。
+- 不做断点续传。
+- 不在预下载时弹窗。
+
+### 共享状态
+
+`AtEaseRootView` 持有唯一：
+
+```text
+AtEaseSubscriptionService
+MeditationAudioDownloadManager
+```
+
+分发方式：
+
+```text
+.environmentObject(subscription)
+.environmentObject(audioDownloadManager)
+```
+
+作用范围：
+
+1. 练习页：显示已离线 / 下载中。
+2. 播放器关闭后：刷新缓存状态。
+3. 设置页：开关预下载。
+4. 离线音频页：下载、删除、清理。
+
+### 预下载规则
+
+设置项：
+
+```text
+atease.autoPredownloadEnabled
+```
+
+默认值：
+
+```text
+false
+```
+
+触发时机：
+
+1. 用户开启设置开关。
+2. Root 启动或订阅状态变化时，若开关已开启。
+
+候选内容：
+
+```text
+audioKind == remote
+  && !isDownloaded
+  && (!isSubscriptionRequired || isSubscribed)
+```
+
+处理顺序：
+
+1. 按 manifest 原序。
+2. 逐条下载。
+3. 单条失败记录 failed，然后处理下一条。
+4. 全部处理完成后刷新统计。
+5. 用户可取消；取消后不再开始新条目。
+
+进度状态：
+
+```text
+isPredownloadRunning
+predownloadCompletedCount
+predownloadTotalCount
+predownloadCurrentID
+```
+
+设置页显示：
+
+- 开关关闭：“自动预下载”。
+- 开关开启并运行：“正在预下载 X / Y”。
+- 开关开启但无候选：“自动预下载新内容”。
+- 运行中显示“取消”。
+
+### 列表与播放器联动
+
+练习列表：
+
+1. remote 内容已下载显示“已离线”。
+2. remote 内容正在下载显示“下载中”。
+3. scripted / bundled 不显示下载状态。
+4. 已离线状态不使用强调色做营销。
+
+播放器：
+
+1. 播放前仍由 `MeditationAudioPreparationService` 处理。
+2. 播放器下载完成后，关闭页面刷新共享缓存。
+3. 管理页删除后，列表状态自动回到未下载。
+
+### 验收
+
+- 默认状态不自动下载。
+- 开启开关后按顺序处理可访问 remote 内容。
+- 未订阅时跳过订阅内容。
+- 已下载内容跳过。
+- 单条失败后继续后续内容。
+- 取消后不开始新下载。
+- 播放器内下载并退出后，列表显示已离线。
+- 设置页、离线音频页、练习列表状态一致。
+
 ## 8. 技术架构
 
 - iOS 17+
@@ -710,11 +834,11 @@ removeAllDownloads()
 - ContentDownloadService 下载底座
 - MeditationAudioPreparationService 远程音频准备
 - MeditationAudioPlaybackService 本地音频播放协议
-- MeditationAudioDownloadManager 音频下载管理
+- MeditationAudioDownloadManager 音频下载与预下载管理
 - MeditationContentAccessService 内容访问判定
 - BGTaskScheduler 后续实现
 
-当前 v0.8 已支持远程音频下载、离线复用、下载管理和缓存清理；后台批量预下载与正式资产仍在后续版本。
+当前 v0.9 已支持可选顺序预下载、App 级缓存状态联动与离线状态展示；OS 级后台任务与正式资产仍在后续版本。
 
 ## 9. 命名
 
@@ -741,6 +865,7 @@ At Ease 按六个阶段推进，避免一开始做成内容库：
 | `0.6` | 订阅内容分发 | 订阅内容接入、访问判定、锁定/解锁联动 |
 | `0.7` | 远程音频与离线播放 | remoteAudio schema、沙盒下载、离线复用、播放底座 |
 | `0.8` | 音频下载管理 | 缓存列表、大小、删除、清理全部、订阅锁定规则 |
+| `0.9` | 可选预下载与状态联动 | 共享缓存状态、可选顺序预下载、取消、列表离线状态 |
 | `1.0` | 公开发布 | 稳定性、无障碍、合规、截图、TestFlight 与审核 |
 
 版本推进约束：
@@ -759,8 +884,8 @@ At Ease 按六个阶段推进，避免一开始做成内容库：
 | 文档 | 产品设计、进度、README、ADR | ✅ |
 | 工程 | Tuist manifest、Workspace 注册、资源 | ✅ |
 | 模型 | 情绪签到、练习记录 | ✅ |
-| 服务 | 呼吸节奏、推荐、分钟聚合、内容校验、脚本播放、下载底座 | ✅ |
-| UI | 引导、今日、呼吸、计时、进度、设置、非声音练习、引导冥想 | ✅ |
+| 服务 | 呼吸节奏、推荐、分钟聚合、内容校验、脚本播放、下载与预下载底座 | ✅ |
+| UI | 引导、今日、呼吸、计时、进度、设置、非声音练习、引导冥想、离线音频 | ✅ |
 | 触觉 | Core Haptics 呼吸同步 | ✅ |
 | HealthKit | 正念分钟写入 | ✅ |
 | Live Activity | 呼吸与计时进度 | ✅ |
@@ -769,6 +894,7 @@ At Ease 按六个阶段推进，避免一开始做成内容库：
 | 下载 | 状态协议与本地目录底座 | ✅ |
 | 远程音频 | schema v2、准备服务、播放协议、离线复用 | ✅ |
 | 缓存管理 | 离线音频列表、大小、删除、清理全部 | ✅ |
+| 预下载 | 可选顺序预下载、取消、订阅权限过滤 | ✅ |
 | 订阅 | StoreKit 2 分层、缓存、恢复购买、低调入口 | ✅ |
 | 内容分发 | 访问判定、锁定卡片、播放器二次校验 | ✅ |
 
@@ -812,5 +938,7 @@ At Ease 按六个阶段推进，避免一开始做成内容库：
 - [x] scripted 内容不触发下载。
 - [x] 离线音频列表只显示 remote 内容。
 - [x] 删除单条与清理全部只影响缓存，不影响练习记录。
+- [x] App 级缓存状态在练习列表、播放器和设置页联动。
+- [x] 可选预下载默认关闭，逐条处理可访问内容。
 - [x] 单元测试通过。
 - [x] 无第三方运行时依赖。

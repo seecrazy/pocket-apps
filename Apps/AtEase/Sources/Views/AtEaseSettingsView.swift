@@ -7,9 +7,11 @@ struct AtEaseSettingsView: View {
     @AppStorage("atease.hapticsEnabled") private var hapticsEnabled = true
     @AppStorage("atease.defaultMinutes") private var defaultMinutes = 5
     @AppStorage("atease.voiceGuidanceEnabled") private var voiceGuidanceEnabled = true
+    @AppStorage("atease.autoPredownloadEnabled") private var autoPredownloadEnabled = false
     @Environment(\.modelContext) private var modelContext
     @Query private var sessions: [PracticeSessionModel]
     @EnvironmentObject private var subscription: AtEaseSubscriptionService
+    @EnvironmentObject private var audioDownloadManager: MeditationAudioDownloadManager
 
     var body: some View {
         ScrollView {
@@ -71,8 +73,40 @@ struct AtEaseSettingsView: View {
                 )
             }
             .buttonStyle(.plain)
+
+            Toggle("自动预下载", isOn: $autoPredownloadEnabled)
+                .tint(AtEaseDesignTokens.accentBreath)
+
+            if audioDownloadManager.isPredownloadRunning {
+                HStack {
+                    Text("正在预下载 \(audioDownloadManager.predownloadCompletedCount) / \(audioDownloadManager.predownloadTotalCount)")
+                        .font(.footnote)
+                        .foregroundStyle(AtEaseDesignTokens.textSecondary)
+
+                    Spacer()
+
+                    Button("取消") {
+                        audioDownloadManager.cancelPredownload()
+                    }
+                    .font(.footnote)
+                    .foregroundStyle(AtEaseDesignTokens.textPrimary)
+                }
+            } else {
+                Text("只下载当前可访问的远程音频。")
+                    .font(.footnote)
+                    .foregroundStyle(AtEaseDesignTokens.textSecondary)
+            }
         }
         .background(Color.white.opacity(0.55), in: .rect(cornerRadius: 16))
+        .onChange(of: autoPredownloadEnabled) { _, enabled in
+            if enabled {
+                Task {
+                    await audioDownloadManager.predownloadUnlocked(isSubscribed: subscription.isSubscribed)
+                }
+            } else {
+                audioDownloadManager.cancelPredownload()
+            }
+        }
     }
 
     private var privacySection: some View {

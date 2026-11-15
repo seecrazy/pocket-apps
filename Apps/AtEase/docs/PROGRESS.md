@@ -1,12 +1,12 @@
 # At Ease 进度文档
 
-> 当前版本：0.8.0
-> 状态：音频缓存管理完成，等待正式音频资产、后台预下载、CDN 与 App Store Connect 产品
+> 当前版本：0.9.0
+> 状态：可选预下载与缓存状态联动完成，等待正式音频资产、OS 级后台预下载、CDN 与 App Store Connect 产品
 > 最后更新：2026-11-15
 
 ## 当前摘要
 
-At Ease 已完成 v0.1–v0.8 的核心路径：无登录呼吸/计时、情绪签到、本地进度、可选语音、Core Haptics、HealthKit、Live Activity、非声音练习、环境音混音、5 条免费结构化引导冥想、StoreKit 2 订阅底座、3 条订阅深度内容原型的锁定 / 解锁分发、远程音频下载与离线播放底座，以及音频缓存管理。正式订阅音频、后台预下载、CDN 分发、App Store Connect 产品配置和 TestFlight 发布仍在后续阶段。
+At Ease 已完成 v0.1–v0.9 的核心路径：无登录呼吸/计时、情绪签到、本地进度、可选语音、Core Haptics、HealthKit、Live Activity、非声音练习、环境音混音、5 条免费结构化引导冥想、StoreKit 2 订阅底座、3 条订阅深度内容原型的锁定 / 解锁分发、远程音频下载与离线播放底座、音频缓存管理，以及可选顺序预下载。正式订阅音频、OS 级后台预下载、CDN 分发、App Store Connect 产品配置和 TestFlight 发布仍在后续阶段。
 
 ## 已完成
 
@@ -138,6 +138,32 @@ At Ease 已完成 v0.1–v0.8 的核心路径：无登录呼吸/计时、情绪�
 - [x] 未订阅的订阅内容显示“订阅解锁”，不提供下载。
 - [x] 缓存列表、大小、下载、删除、清理全部测试。
 
+### v0.9 — 可选预下载与状态联动
+
+- [x] `AtEaseRootView` 持有唯一 `MeditationAudioDownloadManager`。
+- [x] 通过 environment 注入练习页、设置页和离线音频页。
+- [x] 离线音频页改为使用共享缓存状态。
+- [x] `MeditationAudioDownloadManager` 新增内容级状态查询。
+- [x] 新增 `isDownloaded(for:)`，练习列表显示“已离线”。
+- [x] 新增下载中状态显示。
+- [x] 播放器关闭后自动刷新共享缓存状态。
+- [x] 新增 `atease.autoPredownloadEnabled` 设置，默认关闭。
+- [x] 设置页新增“自动预下载”开关。
+- [x] 开启开关立即预下载当前可访问内容。
+- [x] Root 启动后根据开关预下载。
+- [x] 订阅状态变化后根据开关重新预下载。
+- [x] 预下载只处理 `audioKind == remote` 内容。
+- [x] 预下载跳过已下载内容。
+- [x] 预下载未订阅时跳过订阅内容。
+- [x] 预下载按 manifest 原序逐条处理，不并发请求。
+- [x] 单条失败保留 failed 状态，后续条目继续。
+- [x] 新增预下载完成数、总数和当前条目。
+- [x] 设置页显示“正在预下载 X / Y”。
+- [x] 预下载运行中支持取消。
+- [x] 取消后不再开始新条目。
+- [x] scripted / bundled 不显示缓存状态。
+- [x] 预下载权限过滤、失败继续、取消与已下载跳过测试。
+
 ### 发布前
 
 - [ ] 真机验证 Core Haptics、HealthKit、Live Activity。
@@ -157,6 +183,7 @@ At Ease 已完成 v0.1–v0.8 的核心路径：无登录呼吸/计时、情绪�
 | `0.6` | 订阅内容分发 | ✅ 代码完成，正式内容资产待上架 |
 | `0.7` | 远程音频与离线播放 | ✅ 代码完成，CDN 与正式资产待上架 |
 | `0.8` | 音频下载管理 | ✅ 已完成 |
+| `0.9` | 可选预下载与状态联动 | ✅ 已完成 |
 | `1.0` | 公开发布 | ⏳ |
 
 ## 验证状态
@@ -164,7 +191,7 @@ At Ease 已完成 v0.1–v0.8 的核心路径：无登录呼吸/计时、情绪�
 最近一次 At Ease 单元测试：
 
 ```text
-Executed 49 tests, with 0 failures
+Executed 55 tests, with 0 failures
 ** TEST SUCCEEDED **
 ```
 

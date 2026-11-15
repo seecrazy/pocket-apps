@@ -7,6 +7,7 @@ struct PracticeView: View {
     let hapticsEnabled: Bool
     let defaultMinutes: Int
     let isSubscribed: Bool
+    @EnvironmentObject private var audioDownloadManager: MeditationAudioDownloadManager
     @State private var activeMeditation: MeditationContentItem?
 
     var body: some View {
@@ -27,9 +28,13 @@ struct PracticeView: View {
         }
         .background(AtEaseDesignTokens.canvas)
         .navigationTitle("练习")
-        .fullScreenCover(item: $activeMeditation) { item in
-            MeditationPlayerView(item: item, isSubscribed: isSubscribed)
-        }
+        .fullScreenCover(
+            item: $activeMeditation,
+            onDismiss: { audioDownloadManager.reload() },
+            content: { item in
+                MeditationPlayerView(item: item, isSubscribed: isSubscribed)
+            }
+        )
         .navigationBarTitleDisplayMode(.large)
     }
 

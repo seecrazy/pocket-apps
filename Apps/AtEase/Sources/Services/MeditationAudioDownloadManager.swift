@@ -42,6 +42,10 @@ final class MeditationAudioDownloadManager: ObservableObject {
     @Published private(set) var itemStates: [String: AudioDownloadItemState] = [:]
     @Published private(set) var isLoading = false
     @Published private(set) var message: String?
+    @Published private(set) var isPredownloadRunning = false
+    @Published private(set) var predownloadCompletedCount = 0
+    @Published private(set) var predownloadTotalCount = 0
+    @Published private(set) var predownloadCurrentID: String?
 
     private let downloadService: ContentDownloadServicing
     private let manifestProvider: () throws -> AtEaseContentManifest
@@ -65,6 +69,45 @@ final class MeditationAudioDownloadManager: ObservableObject {
         items
             .filter(\.isDownloaded)
             .reduce(0) { $0 + $1.fileSizeBytes }
+    }
+
+    func state(for item: MeditationContentItem) -> AudioDownloadItemState? {
+        guard item.audioKind == .remote else { return nil }
+        return itemStates[item.id]
+    }
+
+    func isDownloaded(for item: MeditationContentItem) -> Bool {
+        items.first { $0.id == item.id }?.isDownloaded ?? false
+    }
+
+    func predownloadUnlocked(isSubscribed: Bool) async {
+        guard !isPredownloadRunning else { return }
+
+        reload()
+        let candidates = items.filter { item in
+            !item.isDownloaded && (!item.isSubscriptionRequired || isSubscribed)
+        }
+
+        guard !candidates.isEmpty else { return }
+
+        isPredownloadRunning = true
+        predownloadCompletedCount = 0
+        predownloadTotalCount = candidates.count
+
+        for item in candidates {
+            guard isPredownloadRunning else { break }
+
+            predownloadCurrentID = item.id
+            await download(item)
+            predownloadCompletedCount += 1
+        }
+
+        isPredownloadRunning = false
+        predownloadCurrentID = nil
+    }
+
+    func cancelPredownload() {
+        isPredownloadRunning = false
     }
 
     func reload() {
@@ -105,8 +148,10 @@ final class MeditationAudioDownloadManager: ObservableObject {
             self.items = items
             let downloadedIDs = Set(items.filter(\.isDownloaded).map(\.id))
             itemStates = itemStates.filter { key, state in
-                guard downloadedIDs.contains(key) else { return false }
-                return state != .downloading
+                if downloadedIDs.contains(key) {
+                    return state != .downloading
+                }
+                return state == .failed
             }
             message = nil
         } catch {

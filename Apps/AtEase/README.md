@@ -4,13 +4,13 @@
   <img alt="iOS" src="https://img.shields.io/badge/iOS-17%2B-0A84FF">
   <img alt="SwiftUI" src="https://img.shields.io/badge/UI-SwiftUI-32ADE6">
   <img alt="SwiftData" src="https://img.shields.io/badge/Data-SwiftData-0A84FF">
-  <img alt="Version" src="https://img.shields.io/badge/Version-0.8.0-8E8E93">
-  <img alt="Status" src="https://img.shields.io/badge/Status-Audio_Cache_Management-34C759">
+  <img alt="Version" src="https://img.shields.io/badge/Version-0.9.0-8E8E93">
+  <img alt="Status" src="https://img.shields.io/badge/Status-Optional_Predownload-34C759">
 </p>
 
 > 每天一分钟，心安一下。
 
-At Ease 是一款低门槛、不制造压力的极简冥想 App。当前版本完成呼吸、计时器、情绪签到、非声音练习、系统级触觉/健康/锁屏集成、5 条免费引导冥想、3 条订阅深度内容原型、订阅状态驱动的内容解锁、远程音频离线播放底座，以及音频缓存管理。
+At Ease 是一款低门槛、不制造压力的极简冥想 App。当前版本完成呼吸、计时器、情绪签到、非声音练习、系统级触觉/健康/锁屏集成、5 条免费引导冥想、3 条订阅深度内容原型、订阅状态驱动的内容解锁、远程音频离线播放底座、音频缓存管理，以及可选顺序预下载。
 
 ## 目录
 
@@ -116,6 +116,16 @@ open PocketApps.xcworkspace
 - 删除缓存不会影响练习记录、收藏或完成状态。
 - 未订阅的订阅内容只显示“订阅解锁”，不提供下载。
 
+### 可选预下载与状态联动（v0.9）
+- 音频缓存状态提升为 App 级共享状态。
+- 练习列表、播放器退出、设置页和离线音频页使用同一缓存状态。
+- remote 内容在练习列表显示“已离线”或“下载中”。
+- 设置页新增“自动预下载”，默认关闭。
+- 开启后按 manifest 原序逐条下载当前可访问内容。
+- 未订阅时跳过订阅内容，已下载内容自动跳过。
+- 单条失败保留重试状态，继续处理后续内容。
+- 预下载过程可取消，不做并发请求。
+
 ## 体验架构
 
 ```text
@@ -159,7 +169,7 @@ App 启动
 - UI：SwiftUI
 - 存储：SwiftData / App 沙盒
 - 内容：bundled JSON manifest schema v2 + 访问判定 + remoteAudio
-- 服务：呼吸节奏、内容加载与校验、脚本播放器、内容访问、音频准备与播放、音频缓存管理、下载底座、HealthKit、Live Activity、Core Haptics
+- 服务：呼吸节奏、内容加载与校验、脚本播放器、内容访问、音频准备与播放、音频缓存与预下载管理、下载底座、HealthKit、Live Activity、Core Haptics
 - 设计令牌：暖灰画布、近黑呼吸页、雾蓝强调、五级情绪色
 - 订阅：StoreKit 2、可注入 provider、UserDefaults 状态缓存、内容分层
 
@@ -193,6 +203,7 @@ At Ease 当前覆盖点：
 - 内置内容包含 5 条免费和 3 条订阅条目。
 - remoteAudio schema 校验、下载失败、本地复用与 scripted 免下载。
 - 音频缓存列表、下载、删除、清理全部。
+- 可选预下载的权限过滤、失败继续、取消与已下载跳过。
 
 ## Roadmap
 
@@ -205,10 +216,11 @@ At Ease 当前覆盖点：
 - `v0.6`：订阅内容接入、访问判定、锁定/解锁联动、播放器二次校验。
 - `v0.7`：remoteAudio schema、首次播放下载、本地缓存复用、播放底座。
 - `v0.8`：离线音频管理页、缓存大小、删除单条、清理全部。
+- `v0.9`：App 级缓存状态、可选顺序预下载、取消、列表离线状态。
 
 ### 下一步
 - 配置 App Store Connect 月度 / 年度订阅与 7 天试用。
-- 接入正式导师音频、睡眠故事、完整多周课程、后台批量预下载与 CDN 分发。
+- 接入正式导师音频、睡眠故事、完整多周课程、OS 级后台预下载与 CDN 分发。
 - `v1.0`：稳定性、无障碍、合规、截图、TestFlight 与审核。
 
 发布原则：

@@ -35,7 +35,7 @@ for app in "${apps[@]}"; do
 
   expected_version="1.3.0"
   if [ "$app" == "AtEase" ]; then
-    expected_version="0.7.0"
+    expected_version="0.8.0"
   fi
   if ! grep -q "version: \"$expected_version\"" "$manifest"; then
     echo "Expected version $expected_version in $manifest"

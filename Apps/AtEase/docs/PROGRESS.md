@@ -1,12 +1,12 @@
 # At Ease 进度文档
 
-> 当前版本：0.7.0
-> 状态：远程音频底座完成，等待正式音频资产、CDN 与 App Store Connect 产品
+> 当前版本：0.8.0
+> 状态：音频缓存管理完成，等待正式音频资产、后台预下载、CDN 与 App Store Connect 产品
 > 最后更新：2026-11-15
 
 ## 当前摘要
 
-At Ease 已完成 v0.1–v0.7 的核心路径：无登录呼吸/计时、情绪签到、本地进度、可选语音、Core Haptics、HealthKit、Live Activity、非声音练习、环境音混音、5 条免费结构化引导冥想、StoreKit 2 订阅底座、3 条订阅深度内容原型的锁定 / 解锁分发，以及远程音频下载与离线播放底座。正式订阅音频、CDN 分发、App Store Connect 产品配置和 TestFlight 发布仍在后续阶段。
+At Ease 已完成 v0.1–v0.8 的核心路径：无登录呼吸/计时、情绪签到、本地进度、可选语音、Core Haptics、HealthKit、Live Activity、非声音练习、环境音混音、5 条免费结构化引导冥想、StoreKit 2 订阅底座、3 条订阅深度内容原型的锁定 / 解锁分发、远程音频下载与离线播放底座，以及音频缓存管理。正式订阅音频、后台预下载、CDN 分发、App Store Connect 产品配置和 TestFlight 发布仍在后续阶段。
 
 ## 已完成
 
@@ -114,6 +114,30 @@ At Ease 已完成 v0.1–v0.7 的核心路径：无登录呼吸/计时、情绪�
 - [x] 新增 `AVAudioPlayerAdapter` 与可替换的 `MeditationAudioPlaying` 协议。
 - [x] remoteAudio schema、下载失败、本地复用与 scripted 免下载测试。
 
+### v0.8 — 音频下载管理
+
+- [x] `AudioDownloadSummary` 描述远程音频标题、路径、大小与订阅要求。
+- [x] `AudioDownloadItemState` 支持 idle、downloading、downloaded、failed。
+- [x] 新增 `MeditationAudioDownloadManager`。
+- [x] 管理页只加载 `audioKind == remote` 的内容。
+- [x] 重新加载时检查本地文件、大小和修改时间。
+- [x] 支持单条下载。
+- [x] 下载中禁止重复触发。
+- [x] 下载成功后自动刷新大小与状态。
+- [x] 下载失败显示中性提示并支持重试。
+- [x] `ContentDownloadService` 新增本地缓存列表。
+- [x] 新增文件大小读取。
+- [x] 新增删除单个 `Downloads/<contentID>/` 目录。
+- [x] 新增删除全部远程音频缓存。
+- [x] 设置页新增“离线音频”入口。
+- [x] 管理页显示已缓存条数与总大小。
+- [x] 每条内容显示下载 / 下载中 / 已下载 / 重试状态。
+- [x] 已下载内容显示大小和“删除”。
+- [x] 支持“清理全部”。
+- [x] 空状态说明当前还没有远程音频内容。
+- [x] 未订阅的订阅内容显示“订阅解锁”，不提供下载。
+- [x] 缓存列表、大小、下载、删除、清理全部测试。
+
 ### 发布前
 
 - [ ] 真机验证 Core Haptics、HealthKit、Live Activity。
@@ -132,6 +156,7 @@ At Ease 已完成 v0.1–v0.7 的核心路径：无登录呼吸/计时、情绪�
 | `0.5` | 订阅底座 | ✅ 代码完成，商店产品待配置 |
 | `0.6` | 订阅内容分发 | ✅ 代码完成，正式内容资产待上架 |
 | `0.7` | 远程音频与离线播放 | ✅ 代码完成，CDN 与正式资产待上架 |
+| `0.8` | 音频下载管理 | ✅ 已完成 |
 | `1.0` | 公开发布 | ⏳ |
 
 ## 验证状态
@@ -139,7 +164,7 @@ At Ease 已完成 v0.1–v0.7 的核心路径：无登录呼吸/计时、情绪�
 最近一次 At Ease 单元测试：
 
 ```text
-Executed 41 tests, with 0 failures
+Executed 49 tests, with 0 failures
 ** TEST SUCCEEDED **
 ```
 

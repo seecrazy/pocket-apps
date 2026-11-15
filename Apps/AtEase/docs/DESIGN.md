@@ -593,6 +593,111 @@ UI 状态：
 - 播放服务协议便于替换 AVAudioPlayer / AVAudioEngine，并允许测试注入 mock。
 - schema v2 的 `remoteAudio` 可为空；正式音频资产上架前 UI 不显示下载入口。
 
+## 7.6 v0.8 音频下载管理
+
+### 目标与非目标
+
+目标：
+
+- 让用户看到哪些远程音频已下载、总缓存大小，并可以删除或重新下载。
+- 设置页新增“离线音频”入口。
+- 管理页只处理 `audioKind == remote` 的内容，不展示 scripted / bundled。
+- 删除音频只删除沙盒中的 `Downloads/<contentID>/`，不删除练习记录、收藏或完成状态。
+- “清理全部”一次删除所有远程音频缓存。
+- 下载和删除操作状态清晰、可重复触发，无警告色。
+- 订阅过期后，已下载内容保留；再次播放仍需通过访问校验。
+
+非目标：
+
+- 不做后台批量预下载。
+- 不做单个内容进度条。
+- 不做自动清理。
+- 不做存储配额设置。
+- 不把 scripted / bundled 内容移入下载管理。
+
+### 信息模型
+
+`AudioDownloadSummary`
+
+```text
+contentID
+title
+subtitle
+fileExtension
+fileURL
+fileSizeBytes
+modifiedAt
+isSubscriptionRequired
+```
+
+`AudioDownloadItemState`
+
+```text
+idle | downloading | downloaded | failed
+```
+
+`MeditationAudioDownloadManager` 负责：
+
+1. 加载 bundled manifest。
+2. 过滤 remote 内容。
+3. 检查本地文件并计算大小。
+4. 提供 `download`、`remove`、`removeAll`、`reload`。
+5. 管理页操作后自动刷新。
+
+文件层新增能力：
+
+```text
+downloadedAudioURLs()
+fileSize(at:)
+removeDownload(contentID:)
+removeAllDownloads()
+```
+
+### UI
+
+设置页：
+
+```text
+内容
+├── 订阅
+└── 离线音频
+```
+
+离线音频页：
+
+- 顶部显示“已缓存 X 条 / Y MB”。
+- 每条 remote 内容显示标题、副标题、状态和操作。
+- 未下载：显示“下载”。
+- 下载中：显示 `ProgressView`。
+- 已下载：显示大小和“删除”。
+- 失败：显示“重试”。
+- 页面右上角提供“清理全部”，只有存在缓存时可用。
+- 无 remote 内容时显示“还没有远程音频内容。”，不显示催促文案。
+
+订阅锁定规则：
+
+1. 未订阅的订阅内容只显示“订阅解锁”，不提供下载。
+2. 已订阅内容显示“下载”。
+3. 免费远程内容也支持下载。
+4. 删除已下载内容不受订阅状态影响。
+
+### 技术边界
+
+- `ContentDownloadService` 继续负责文件系统与下载。
+- `MeditationAudioDownloadManager` 是管理页唯一状态源。
+- `MeditationAudioPreparationService` 继续负责播放前准备。
+- 缓存目录不存在时视为空，不主动创建。
+- 删除失败使用中性提示“暂时无法删除”，不阻断重试。
+
+### 验收
+
+- 设置页可以进入离线音频管理页。
+- 当前 catalog 没有 remote 内容时显示空状态。
+- mock remote 内容下载后显示大小和删除操作。
+- 删除单条内容后文件目录消失，记录保留。
+- 清理全部后缓存总数归零。
+- 订阅过期后已缓存文件仍可见、可删除。
+
 ## 8. 技术架构
 
 - iOS 17+
@@ -605,10 +710,11 @@ UI 状态：
 - ContentDownloadService 下载底座
 - MeditationAudioPreparationService 远程音频准备
 - MeditationAudioPlaybackService 本地音频播放协议
+- MeditationAudioDownloadManager 音频下载管理
 - MeditationContentAccessService 内容访问判定
 - BGTaskScheduler 后续实现
 
-当前 v0.7 已支持远程音频下载、离线复用和本地播放底座；后台批量预下载与正式资产仍在后续版本。
+当前 v0.8 已支持远程音频下载、离线复用、下载管理和缓存清理；后台批量预下载与正式资产仍在后续版本。
 
 ## 9. 命名
 
@@ -634,6 +740,7 @@ At Ease 按六个阶段推进，避免一开始做成内容库：
 | `0.5` | 订阅闭环 | StoreKit 2、免费/订阅分层、试用、恢复购买、订阅管理 |
 | `0.6` | 订阅内容分发 | 订阅内容接入、访问判定、锁定/解锁联动 |
 | `0.7` | 远程音频与离线播放 | remoteAudio schema、沙盒下载、离线复用、播放底座 |
+| `0.8` | 音频下载管理 | 缓存列表、大小、删除、清理全部、订阅锁定规则 |
 | `1.0` | 公开发布 | 稳定性、无障碍、合规、截图、TestFlight 与审核 |
 
 版本推进约束：
@@ -661,6 +768,7 @@ At Ease 按六个阶段推进，避免一开始做成内容库：
 | 内容 | 8 条引导冥想、schema、播放器、收藏、订阅分层 | ✅ |
 | 下载 | 状态协议与本地目录底座 | ✅ |
 | 远程音频 | schema v2、准备服务、播放协议、离线复用 | ✅ |
+| 缓存管理 | 离线音频列表、大小、删除、清理全部 | ✅ |
 | 订阅 | StoreKit 2 分层、缓存、恢复购买、低调入口 | ✅ |
 | 内容分发 | 访问判定、锁定卡片、播放器二次校验 | ✅ |
 
@@ -702,5 +810,7 @@ At Ease 按六个阶段推进，避免一开始做成内容库：
 - [x] 远程音频下载失败不写练习记录。
 - [x] 本地已存在音频时不重复下载。
 - [x] scripted 内容不触发下载。
+- [x] 离线音频列表只显示 remote 内容。
+- [x] 删除单条与清理全部只影响缓存，不影响练习记录。
 - [x] 单元测试通过。
 - [x] 无第三方运行时依赖。

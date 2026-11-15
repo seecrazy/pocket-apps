@@ -60,6 +60,17 @@ struct AtEaseSettingsView: View {
                 )
             }
             .buttonStyle(.plain)
+
+            NavigationLink {
+                AtEaseAudioDownloadsView()
+            } label: {
+                SettingRow(
+                    systemImage: "arrow.down.circle",
+                    title: "离线音频",
+                    detail: "查看下载状态与清理缓存"
+                )
+            }
+            .buttonStyle(.plain)
         }
         .background(Color.white.opacity(0.55), in: .rect(cornerRadius: 16))
     }

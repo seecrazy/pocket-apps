@@ -16,6 +16,59 @@ final class ContentDownloadServiceTests: XCTestCase {
 
         XCTAssertNil(service.downloadedFileURL(for: "missing-content", fileExtension: "m4a"))
     }
+
+    func testDownloadedAudioURLsReturnsEmptyWhenCacheDirectoryIsMissing() {
+        let service = ContentDownloadService(
+            directory: FileManager.default.temporaryDirectory
+                .appending(path: "atease-cache-missing-\(UUID().uuidString)", directoryHint: .isDirectory)
+        )
+
+        XCTAssertTrue(service.downloadedAudioURLs().isEmpty)
+    }
+
+    func testFileSizeAndRemoveDownloadAffectOnlySelectedContent() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appending(path: "atease-cache-\(UUID().uuidString)", directoryHint: .isDirectory)
+        let service = ContentDownloadService(directory: directory)
+
+        try createAudioFile(service: service, contentID: "one", bytes: [1, 2, 3])
+        try createAudioFile(service: service, contentID: "two", bytes: [4, 5])
+
+        XCTAssertEqual(service.downloadedAudioURLs().count, 2)
+        XCTAssertEqual(service.fileSize(at: service.localFileURL(for: "one", fileExtension: "m4a")), 3)
+
+        try service.removeDownload(contentID: "one")
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: service.localFileURL(for: "one", fileExtension: "m4a").path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: service.localFileURL(for: "two", fileExtension: "m4a").path))
+    }
+
+    func testRemoveAllDownloadsClearsCache() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appending(path: "atease-cache-\(UUID().uuidString)", directoryHint: .isDirectory)
+        let service = ContentDownloadService(directory: directory)
+
+        try createAudioFile(service: service, contentID: "one", bytes: [1])
+        try createAudioFile(service: service, contentID: "two", bytes: [2])
+
+        try service.removeAllDownloads()
+
+        XCTAssertTrue(service.downloadedAudioURLs().isEmpty)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: directory.path))
+    }
+
+    private func createAudioFile(
+        service: ContentDownloadService,
+        contentID: String,
+        bytes: [UInt8]
+    ) throws {
+        let url = service.localFileURL(for: contentID, fileExtension: "m4a")
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data(bytes).write(to: url)
+    }
 }
 
 final class MockContentDownloadService: ContentDownloadServicing {
@@ -43,6 +96,26 @@ final class MockContentDownloadService: ContentDownloadServicing {
     func downloadedFileURL(for contentID: String, fileExtension: String) -> URL? {
         let url = localFileURL(for: contentID, fileExtension: fileExtension)
         return FileManager.default.fileExists(atPath: url.path) ? url : nil
+    }
+
+    func downloadedAudioURLs() -> [URL] {
+        guard FileManager.default.fileExists(atPath: directory.path) else { return [] }
+        return (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? []
+    }
+
+    func fileSize(at url: URL) -> Int {
+        (try? FileManager.default.attributesOfItem(atPath: url.path))?[.size] as? Int ?? 0
+    }
+
+    func removeDownload(contentID: String) throws {
+        let contentDirectory = directory.appending(path: contentID, directoryHint: .isDirectory)
+        guard FileManager.default.fileExists(atPath: contentDirectory.path) else { return }
+        try FileManager.default.removeItem(at: contentDirectory)
+    }
+
+    func removeAllDownloads() throws {
+        guard FileManager.default.fileExists(atPath: directory.path) else { return }
+        try FileManager.default.removeItem(at: directory)
     }
 
     func download(url: URL, contentID: String, fileExtension: String) async throws -> URL {

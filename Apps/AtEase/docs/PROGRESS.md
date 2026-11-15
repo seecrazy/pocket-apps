@@ -1,12 +1,12 @@
 # At Ease 进度文档
 
-> 当前版本：0.4.0
-> 状态：内容基础设施完成，可进入订阅闭环
+> 当前版本：0.5.0
+> 状态：订阅底座完成，等待订阅内容资产与 App Store Connect 产品
 > 最后更新：2026-11-15
 
 ## 当前摘要
 
-At Ease 已完成 v0.1–v0.4 的核心路径：无登录呼吸/计时、情绪签到、本地进度、可选语音、Core Haptics、HealthKit、Live Activity、非声音练习、环境音混音，以及 5 条免费结构化引导冥想。远程导师音频、订阅付费层和 TestFlight 发布仍在后续阶段。
+At Ease 已完成 v0.1–v0.5 的核心路径：无登录呼吸/计时、情绪签到、本地进度、可选语音、Core Haptics、HealthKit、Live Activity、非声音练习、环境音混音、5 条免费结构化引导冥想，以及 StoreKit 2 订阅底座。真实订阅内容、App Store Connect 产品配置和 TestFlight 发布仍在后续阶段。
 
 ## 已完成
 
@@ -64,11 +64,17 @@ At Ease 已完成 v0.1–v0.4 的核心路径：无登录呼吸/计时、情绪�
 
 ### v0.5 — 订阅闭环
 
-- [ ] 定义订阅分层与 entitlement 规则。
-- [ ] 接入 StoreKit 2。
-- [ ] 实现 7 天免费试用、恢复购买与订阅状态缓存。
-- [ ] 第 3 次练习后收尾卡片中的低调订阅入口。
-- [ ] 订阅失败/无网反馈，不影响本地数据。
+- [x] 定义订阅分层与 entitlement 规则。
+- [x] 接入 StoreKit 2 产品、购买、恢复与 currentEntitlements 刷新。
+- [x] `UserDefaultsSubscriptionCache` 订阅状态缓存。
+- [x] 可注入 `SubscriptionStoreProviding`，错误不改变本地练习数据。
+- [x] 设置页显示免费 / 订阅状态，并提供订阅页与恢复购买。
+- [x] `SubscriptionEntryRule` 控制第 3 次练习后的低调入口。
+- [x] `MeditationPlayerView` 收尾卡片显示一行订阅链接，不弹窗施压。
+- [x] 订阅页展示 StoreKit 返回价格与 introductory offer。
+- [x] 订阅失败 / 无网 / 恢复无购买反馈清晰，不影响免费练习。
+- [ ] App Store Connect 配置月度、年度订阅和 7 天试用。
+- [ ] 接入真实睡眠故事或多周课程内容资产。
 
 ### 发布前
 
@@ -85,7 +91,7 @@ At Ease 已完成 v0.1–v0.4 的核心路径：无登录呼吸/计时、情绪�
 | `0.2` | 身体在场与系统能力 | ✅ 代码完成，真机回归待做 |
 | `0.3` | 非声音练习 | ✅ 代码完成，听感回归待做 |
 | `0.4` | 内容基础设施 | ✅ 已完成 |
-| `0.5` | 订阅闭环 | ⏳ 下一步 |
+| `0.5` | 订阅底座 | ✅ 代码完成，商店产品待配置 |
 | `1.0` | 公开发布 | ⏳ |
 
 ## 验证状态
@@ -93,7 +99,7 @@ At Ease 已完成 v0.1–v0.4 的核心路径：无登录呼吸/计时、情绪�
 最近一次 At Ease 单元测试：
 
 ```text
-Executed 21 tests, with 0 failures
+Executed 27 tests, with 0 failures
 ** TEST SUCCEEDED **
 ```
 

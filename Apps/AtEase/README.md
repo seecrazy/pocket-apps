@@ -4,13 +4,13 @@
   <img alt="iOS" src="https://img.shields.io/badge/iOS-17%2B-0A84FF">
   <img alt="SwiftUI" src="https://img.shields.io/badge/UI-SwiftUI-32ADE6">
   <img alt="SwiftData" src="https://img.shields.io/badge/Data-SwiftData-0A84FF">
-  <img alt="Version" src="https://img.shields.io/badge/Version-0.4.0-8E8E93">
-  <img alt="Status" src="https://img.shields.io/badge/Status-Content_Infrastructure-34C759">
+  <img alt="Version" src="https://img.shields.io/badge/Version-0.5.0-8E8E93">
+  <img alt="Status" src="https://img.shields.io/badge/Status-Subscription_Foundation-34C759">
 </p>
 
 > 每天一分钟，心安一下。
 
-At Ease 是一款低门槛、不制造压力的极简冥想 App。当前版本完成呼吸、计时器、情绪签到、非声音练习、系统级触觉/健康/锁屏集成，以及 5 条可本地播放的免费引导冥想。订阅、睡眠故事与多周课程在后续路线图中。
+At Ease 是一款低门槛、不制造压力的极简冥想 App。当前版本完成呼吸、计时器、情绪签到、非声音练习、系统级触觉/健康/锁屏集成、5 条免费引导冥想，以及 StoreKit 2 订阅底座。真实订阅内容资产在后续阶段上架。
 
 ## 目录
 
@@ -81,6 +81,14 @@ open PocketApps.xcworkspace
 - 温和本地提醒。
 - 触觉、语音与 HealthKit 均可通过设置控制。
 
+### 订阅底座（v0.5）
+- StoreKit 2 自动续期订阅产品模型。
+- 月度与年度产品占位 ID，价格和 offer 由 App Store 返回。
+- 订阅状态基于 `Transaction.currentEntitlements` 刷新，并在本机缓存最近已知状态。
+- 恢复购买始终可用。
+- 第 3 次练习后的收尾卡片只显示一行低调入口。
+- 无网、加载失败或恢复失败不阻断任何免费练习。
+
 ## 体验架构
 
 ```text
@@ -114,7 +122,7 @@ App 启动
 | 音景预设与设置偏好 | UserDefaults | 否 |
 | 可选正念分钟 | HealthKit，经用户授权 | 仅写入本机 Health 数据库 |
 
-当前版本不接入账号、云端、广告、第三方统计。后续订阅仅用于解锁内容，不会迁移或上传练习历史。
+当前版本不接入账号、云端、广告、第三方统计。订阅状态缓存在本机；后续订阅仅用于解锁内容，不会迁移或上传练习历史。
 
 ## 架构与设计
 
@@ -125,6 +133,7 @@ App 启动
 - 内容：bundled JSON manifest + schema 校验
 - 服务：呼吸节奏、内容加载与校验、脚本播放器、下载底座、HealthKit、Live Activity、Core Haptics
 - 设计令牌：暖灰画布、近黑呼吸页、雾蓝强调、五级情绪色
+- 订阅：StoreKit 2、可注入 provider、UserDefaults 状态缓存
 
 完整产品与 UI 设计见 [docs/DESIGN.md](docs/DESIGN.md)。
 
@@ -150,6 +159,8 @@ At Ease 当前覆盖点：
 - 脚本播放器推进、暂停、继续、进度、完成与提前结束。
 - 下载服务状态、目录与本地文件判断。
 - `GuidedContentStateModel` 用户态。
+- 订阅状态缓存、刷新、购买失败保留状态、恢复成功/无购买反馈。
+- 第 3 次练习后显示低调订阅入口的规则。
 
 ## Roadmap
 
@@ -158,9 +169,11 @@ At Ease 当前覆盖点：
 - `v0.2`：Core Haptics、HealthKit、Live Activity。
 - `v0.3`：念头放下、触摸身体扫描、环境音混音。
 - `v0.4`：引导冥想内容基础设施。
+- `v0.5`：StoreKit 2 订阅底座、状态缓存、恢复购买、低调订阅入口。
 
 ### 下一步
-- `v0.5`：StoreKit 2 订阅闭环、7 天试用、恢复购买、低调订阅入口。
+- 配置 App Store Connect 月度 / 年度订阅与 7 天试用。
+- 接入真实睡眠故事或多周课程。
 - `v1.0`：稳定性、无障碍、合规、截图、TestFlight 与审核。
 
 发布原则：

@@ -61,8 +61,8 @@ cd /Users/xiaoyyu/IdeaProjects/pocket-apps
 
 第四轮开始对标成熟产品：SoloGuard 对标 Reminders/Streaks，FocusBox 对标 Forest/Session，SlowCard 对标 FutureMe，AmbientLog 对标 Voice Memos，TabStash 对标 Pocket/Instapaper。
 
-At Ease（心安）已推进到 v0.4：引导页、情绪签到、推荐呼吸、计时器、SwiftData 本地进度、设置页、Core Haptics、HealthKit 写入、Live Activity Widget、念头放下、触摸身体扫描、环境音混音、隐私清单、App Icon、fastlane metadata、5 条免费结构化引导冥想、内容 schema 校验、脚本播放器、收藏/完成状态、下载底座与专项测试。
+At Ease（心安）已推进到 v0.5：引导页、情绪签到、推荐呼吸、计时器、SwiftData 本地进度、设置页、Core Haptics、HealthKit 写入、Live Activity Widget、念头放下、触摸身体扫描、环境音混音、隐私清单、App Icon、fastlane metadata、5 条免费结构化引导冥想、内容 schema 校验、脚本播放器、收藏/完成状态、下载底座、StoreKit 2 订阅底座、状态缓存、恢复购买、第 3 次练习后的低调入口与专项测试。
 
 At Ease v0.1.1 已补充可选声音引导：呼吸阶段语音、计时开始 / 结束语音、呼吸与计时页一键静音，以及设置页声音开关；仍保留视觉与触觉完整可用。
 
-下一阶段是 At Ease v0.5：StoreKit 2 订阅分层、7 天试用、恢复购买、订阅状态缓存，以及第 3 次练习后收尾卡片中的低调订阅入口。订阅失败必须保留本地数据，且不得阻断呼吸与计时器。
+下一阶段是订阅内容资产与分层内容上架：先在 App Store Connect 配置月度 / 年度自动续期订阅和 7 天试用，再接入真实睡眠故事或多周课程。订阅失败必须保留本地数据，且不得阻断呼吸与计时器。

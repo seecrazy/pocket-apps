@@ -157,9 +157,10 @@
 - [x] v0.2：Core Haptics、HealthKit、Live Activity。
 - [x] v0.3：念头放下、触摸身体扫描、环境音混音。
 - [x] v0.4：引导冥想内容 schema、5 条免费内容、播放器、收藏与下载底座。
+- [x] v0.5：StoreKit 2 订阅底座、状态缓存、恢复购买、第 3 次练习后的低调入口。
 - [ ] Core Haptics 真机精度验证。
 - [ ] HealthKit 授权状态与失败 UI。
-- [ ] StoreKit 2 订阅闭环。
+- [ ] 订阅内容资产与分层内容上架。
 
 ### TabStash
 

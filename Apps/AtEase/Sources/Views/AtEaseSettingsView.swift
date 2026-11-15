@@ -9,6 +9,7 @@ struct AtEaseSettingsView: View {
     @AppStorage("atease.voiceGuidanceEnabled") private var voiceGuidanceEnabled = true
     @Environment(\.modelContext) private var modelContext
     @Query private var sessions: [PracticeSessionModel]
+    @StateObject private var subscription = AtEaseSubscriptionService()
 
     var body: some View {
         ScrollView {
@@ -49,7 +50,16 @@ struct AtEaseSettingsView: View {
                 .font(.headline.weight(.medium))
                 .foregroundStyle(AtEaseDesignTokens.textPrimary)
             SettingRow(systemImage: "leaf", title: "当前版本", detail: "呼吸与计时器完全免费")
-            SettingRow(systemImage: "sparkles", title: "后续订阅", detail: "睡眠故事与多周课程")
+            NavigationLink {
+                AtEaseSubscriptionView()
+            } label: {
+                SettingRow(
+                    systemImage: "sparkles",
+                    title: subscription.isSubscribed ? "订阅中" : "订阅",
+                    detail: subscription.isSubscribed ? "睡眠故事与多周课程已解锁" : "睡眠故事与多周课程"
+                )
+            }
+            .buttonStyle(.plain)
         }
         .background(Color.white.opacity(0.55), in: .rect(cornerRadius: 16))
     }

@@ -11,6 +11,8 @@ struct MeditationPlayerView: View {
     @StateObject private var audioGuide = AtEaseAudioGuide()
     @State private var startedAt = Date()
     @State private var hapticPlayer: any AtEaseHapticPlayer = SystemAtEaseHapticPlayer()
+    @State private var showSubscriptionEntry = false
+    @State private var showSubscription = false
     @AppStorage("atease.voiceGuidanceEnabled") private var voiceGuidanceEnabled = true
     let item: MeditationContentItem
 
@@ -107,6 +109,17 @@ struct MeditationPlayerView: View {
                     .accessibilityLabel("结束练习")
                 }
                 .padding(.bottom, 48)
+
+                if showSubscriptionEntry {
+                    Button {
+                        showSubscription = true
+                    } label: {
+                        Text("解锁完整睡眠故事库与多周课程 →")
+                            .font(.footnote)
+                            .foregroundStyle(.white.opacity(0.45))
+                    }
+                    .accessibilityHint("打开订阅页")
+                }
             }
         }
         .preferredColorScheme(.dark)
@@ -124,6 +137,11 @@ struct MeditationPlayerView: View {
         .onChange(of: player.status) { _, status in
             if status == .completed {
                 saveProgress()
+            }
+        }
+        .sheet(isPresented: $showSubscription) {
+            NavigationStack {
+                AtEaseSubscriptionView()
             }
         }
         .onDisappear {
@@ -159,6 +177,9 @@ struct MeditationPlayerView: View {
             )
         }
         try? modelContext.save()
+
+        let sessionCount = (try? modelContext.fetchCount(FetchDescriptor<PracticeSessionModel>())) ?? 0
+        showSubscriptionEntry = SubscriptionEntryRule.shouldShowEntry(afterSessionCount: sessionCount)
     }
 
     private func fetchState() -> GuidedContentStateModel? {

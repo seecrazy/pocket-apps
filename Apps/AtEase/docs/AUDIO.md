@@ -33,6 +33,34 @@ At Ease 的音频分成三类：
 2. 找到文件后使用 `AVAudioPlayer` 播放。
 3. 找不到文件时回退到 iOS 中文语音，避免练习被网络或配置问题阻断。
 
+### Tencent TTS API 对齐
+
+生成脚本已按 Tencent Cloud TTS API `v2019-08-23` 对齐：
+
+| 场景 | Action | 说明 |
+|---|---|---|
+| 短文本实时合成 | `TextToVoice` | 文本上限按 140 个中文字符做安全限制 |
+| 长文本合成 | `CreateTtsTask` + `DescribeTtsTaskStatus` | 创建任务后轮询 `ResultUrl` 并下载 |
+
+关键参数：
+
+```text
+PrimaryLanguage: 1 = 中文，2 = 英文
+SampleRate: 8000 / 16000 / 24000
+Codec: mp3 / wav / pcm
+Speed: -2 至 6
+Volume: -10 至 10
+ModelType: 1 = 默认模型
+SessionId: TextToVoice 使用 UUID 防止重复
+```
+
+注意：
+
+- `TextToVoice` 不存在 `Language` 参数，正确参数名是 `PrimaryLanguage`。
+- `Volume` 不使用 `[0, 10]` 旧假设，正确范围是 `[-10, 10]`。
+- 短文本不调用不存在的 `TextToSpeech` action。
+- 长文本先调用 `CreateTtsTask`，再轮询 `DescribeTtsTaskStatus`。
+
 Tencent TTS 音频文件命名：
 
 ```text
@@ -61,6 +89,12 @@ TENCENT_CLOUD_SECRET_ID / TENCENT_CLOUD_SECRET_KEY
 ```
 
 也会尝试从 `~/.zshrc` 的 `export` 行解析。凭据只用于本地脚本，不会写入仓库或 App Bundle。
+
+可以先检查将生成的资源：
+
+```bash
+python3 scripts/generate_at_ease_tts.py --dry-run
+```
 
 ## 添加新的自然音景
 

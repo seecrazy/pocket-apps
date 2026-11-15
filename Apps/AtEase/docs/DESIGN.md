@@ -971,12 +971,22 @@ App target 增加：
 
 新增 `scripts/generate_at_ease_tts.py`：
 
-- 使用 Tencent Cloud `tts.tencentcloudapi.com`。
+- 使用 Tencent Cloud `tts.tencentcloudapi.com`，短文本使用 `TextToVoice`，长文本使用 `CreateTtsTask` + `DescribeTtsTaskStatus`。
 - 使用 TC3-HMAC-SHA256 签名。
 - 读取 `TENCENT_SECRET_ID` / `TENCENT_SECRET_KEY`。
 - 同时兼容 `TENCENT_TTS_*` 和 `TENCENT_CLOUD_*` 前缀。
 - 从 bundled `ContentCatalog.json` 生成全部步骤语音。
 - 输出到 `Apps/AtEase/Resources/Voice/`。
+
+API 对齐：
+
+- `TextToVoice`：短文本实时合成。
+- `CreateTtsTask` / `DescribeTtsTaskStatus`：长文本任务合成。
+- 使用 `PrimaryLanguage`，不使用不存在的 `Language` 参数。
+- `Volume` 范围 [-10, 10]。
+- `Speed` 范围 [-2, 6]。
+- `SampleRate` 支持 8000 / 16000 / 24000。
+- `Codec` 支持 mp3 / wav / pcm。
 
 App 侧优先级：
 

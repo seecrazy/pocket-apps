@@ -212,6 +212,11 @@ At Ease 已完成 v0.1–v1.1 的仓库内发布路径：无登录呼吸/计时�
 - [x] 计时开始 / 结束语音按固定资源名查找。
 - [x] 新增 `scripts/generate_at_ease_tts.py`。
 - [x] 脚本使用 Tencent Cloud TC3-HMAC-SHA256 签名。
+- [x] 短文本调用 Tencent TTS `TextToVoice`。
+- [x] 长文本调用 `CreateTtsTask` 并轮询 `DescribeTtsTaskStatus`。
+- [x] 使用 `PrimaryLanguage` 而不是不存在的 `Language` 参数。
+- [x] 音量参数按 `[-10, 10]` 对齐。
+- [x] 语速参数按 `[-2, 6]` 对齐。
 - [x] 脚本从环境或 `~/.zshrc` 读取凭据，不写入仓库。
 - [x] 脚本从 `ContentCatalog.json` 生成全部步骤语音。
 - [x] 新增环境音能量、边界、新音景与旧预设兼容测试。

@@ -6,6 +6,7 @@ import SwiftUI
 struct PracticeView: View {
     let hapticsEnabled: Bool
     let defaultMinutes: Int
+    let isSubscribed: Bool
     @State private var activeMeditation: MeditationContentItem?
 
     var body: some View {
@@ -13,7 +14,11 @@ struct PracticeView: View {
             VStack(alignment: .leading, spacing: AtEaseDesignTokens.sectionSpacing) {
                 breathingSection
                 timerSection
-                MeditationLibrarySection(hapticsEnabled: hapticsEnabled, activeItem: $activeMeditation)
+                MeditationLibrarySection(
+                    hapticsEnabled: hapticsEnabled,
+                    isSubscribed: isSubscribed,
+                    activeItem: $activeMeditation
+                )
                 futureSection
             }
             .padding(.horizontal, AtEaseDesignTokens.pagePadding)
@@ -23,7 +28,7 @@ struct PracticeView: View {
         .background(AtEaseDesignTokens.canvas)
         .navigationTitle("练习")
         .fullScreenCover(item: $activeMeditation) { item in
-            MeditationPlayerView(item: item)
+            MeditationPlayerView(item: item, isSubscribed: isSubscribed)
         }
         .navigationBarTitleDisplayMode(.large)
     }

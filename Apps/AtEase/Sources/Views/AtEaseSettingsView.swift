@@ -9,7 +9,7 @@ struct AtEaseSettingsView: View {
     @AppStorage("atease.voiceGuidanceEnabled") private var voiceGuidanceEnabled = true
     @Environment(\.modelContext) private var modelContext
     @Query private var sessions: [PracticeSessionModel]
-    @StateObject private var subscription = AtEaseSubscriptionService()
+    @EnvironmentObject private var subscription: AtEaseSubscriptionService
 
     var body: some View {
         ScrollView {

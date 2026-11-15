@@ -13,13 +13,17 @@ struct MeditationPlayerView: View {
     @State private var hapticPlayer: any AtEaseHapticPlayer = SystemAtEaseHapticPlayer()
     @State private var showSubscriptionEntry = false
     @State private var showSubscription = false
+    @State private var isAccessDenied = false
     @AppStorage("atease.voiceGuidanceEnabled") private var voiceGuidanceEnabled = true
     let item: MeditationContentItem
 
-    init(item: MeditationContentItem) {
+    init(item: MeditationContentItem, isSubscribed: Bool = false) {
         self.item = item
+        self.isSubscribed = isSubscribed
         _player = StateObject(wrappedValue: MeditationScriptPlayer(content: item))
     }
+
+    private let isSubscribed: Bool
 
     var body: some View {
         ZStack {
@@ -52,6 +56,12 @@ struct MeditationPlayerView: View {
                 .padding(.horizontal, AtEaseDesignTokens.pagePadding)
 
                 Spacer()
+
+                if isAccessDenied {
+                    Text("需要订阅解锁")
+                        .font(.footnote)
+                        .foregroundStyle(.white.opacity(0.55))
+                }
 
                 if let step = player.playbackStep {
                     VStack(spacing: 18) {
@@ -124,6 +134,11 @@ struct MeditationPlayerView: View {
         }
         .preferredColorScheme(.dark)
         .onAppear {
+            guard accessService.canPlay(item, isSubscribed: isSubscribed) else {
+                isAccessDenied = true
+                return
+            }
+
             player.voiceEnabled = voiceGuidanceEnabled
             player.start()
         }
@@ -150,6 +165,8 @@ struct MeditationPlayerView: View {
     }
 
     private func saveProgress() {
+        guard accessService.canPlay(item, isSubscribed: isSubscribed) else { return }
+
         let endedAt = Date()
         let seconds = max(1, player.completedSeconds)
         let session = PracticeSessionModel(
@@ -186,4 +203,6 @@ struct MeditationPlayerView: View {
         let descriptor = FetchDescriptor<GuidedContentStateModel>()
         return (try? modelContext.fetch(descriptor))?.first { $0.contentID == item.id }
     }
+
+    private let accessService = MeditationContentAccessService()
 }

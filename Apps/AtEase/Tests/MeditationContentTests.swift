@@ -8,8 +8,9 @@ final class MeditationContentTests: XCTestCase {
         let manifest = try loader.loadBundledCatalog()
 
         XCTAssertEqual(manifest.schemaVersion, 1)
-        XCTAssertEqual(manifest.items.count, 5)
-        XCTAssertTrue(manifest.items.allSatisfy { !$0.isSubscriptionRequired })
+        XCTAssertEqual(manifest.items.count, 8)
+        XCTAssertEqual(manifest.items.filter { !$0.isSubscriptionRequired }.count, 5)
+        XCTAssertEqual(manifest.items.filter(\.isSubscriptionRequired).count, 3)
         XCTAssertTrue(manifest.items.allSatisfy { $0.durationSeconds >= 60 })
         for item in manifest.items {
             let stepTotal = item.steps.reduce(0) { $0 + $1.durationSeconds }

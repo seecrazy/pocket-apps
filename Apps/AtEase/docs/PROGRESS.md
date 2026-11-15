@@ -1,12 +1,12 @@
 # At Ease 进度文档
 
-> 当前版本：0.5.0
-> 状态：订阅底座完成，等待订阅内容资产与 App Store Connect 产品
+> 当前版本：0.6.0
+> 状态：订阅内容分发完成，等待正式音频资产与 App Store Connect 产品
 > 最后更新：2026-11-15
 
 ## 当前摘要
 
-At Ease 已完成 v0.1–v0.5 的核心路径：无登录呼吸/计时、情绪签到、本地进度、可选语音、Core Haptics、HealthKit、Live Activity、非声音练习、环境音混音、5 条免费结构化引导冥想，以及 StoreKit 2 订阅底座。真实订阅内容、App Store Connect 产品配置和 TestFlight 发布仍在后续阶段。
+At Ease 已完成 v0.1–v0.6 的核心路径：无登录呼吸/计时、情绪签到、本地进度、可选语音、Core Haptics、HealthKit、Live Activity、非声音练习、环境音混音、5 条免费结构化引导冥想、StoreKit 2 订阅底座，以及 3 条订阅深度内容原型的锁定 / 解锁分发。正式订阅音频、App Store Connect 产品配置和 TestFlight 发布仍在后续阶段。
 
 ## 已完成
 
@@ -76,6 +76,25 @@ At Ease 已完成 v0.1–v0.5 的核心路径：无登录呼吸/计时、情绪�
 - [ ] App Store Connect 配置月度、年度订阅和 7 天试用。
 - [ ] 接入真实睡眠故事或多周课程内容资产。
 
+### v0.6 — 订阅内容分发
+
+- [x] `MeditationContentAccessService` 作为唯一访问判定入口。
+- [x] 免费内容始终可播放。
+- [x] 订阅内容未授权时返回 `subscriptionRequired`。
+- [x] 内容列表显示免费条目在前、订阅条目在后。
+- [x] 收藏过滤保留锁定订阅条目。
+- [x] 锁定卡片显示 `lock` 与“订阅解锁”，无红色促销样式。
+- [x] 订阅内容点击进入订阅页。
+- [x] `AtEaseRootView` 持有唯一订阅状态并注入 environment。
+- [x] 订阅状态刷新后练习页内容自动解锁。
+- [x] 订阅过期后自动回到锁定状态。
+- [x] 播放器二次校验授权；未授权时不启动、不写练习记录。
+- [x] `ContentCatalog.json` 新增 3 条订阅内容：
+  - [x] 压力释放 · 第 1 天。
+  - [x] 深度身体扫描。
+  - [x] 睡前故事 · 夜里的灯塔。
+- [x] 访问判定、分层列表和内置内容分层测试。
+
 ### 发布前
 
 - [ ] 真机验证 Core Haptics、HealthKit、Live Activity。
@@ -92,6 +111,7 @@ At Ease 已完成 v0.1–v0.5 的核心路径：无登录呼吸/计时、情绪�
 | `0.3` | 非声音练习 | ✅ 代码完成，听感回归待做 |
 | `0.4` | 内容基础设施 | ✅ 已完成 |
 | `0.5` | 订阅底座 | ✅ 代码完成，商店产品待配置 |
+| `0.6` | 订阅内容分发 | ✅ 代码完成，正式内容资产待上架 |
 | `1.0` | 公开发布 | ⏳ |
 
 ## 验证状态
@@ -99,7 +119,7 @@ At Ease 已完成 v0.1–v0.5 的核心路径：无登录呼吸/计时、情绪�
 最近一次 At Ease 单元测试：
 
 ```text
-Executed 27 tests, with 0 failures
+Executed 32 tests, with 0 failures
 ** TEST SUCCEEDED **
 ```
 

@@ -82,6 +82,57 @@
         { "id": "breath", "title": "呼吸", "text": "呼气时更轻一点。", "durationSeconds": 120, "hapticEnabled": false },
         { "id": "rest", "title": "休息", "text": "不需要睡着，休息就好。", "durationSeconds": 90, "hapticEnabled": false }
       ]
+    },
+    {
+      "id": "stress-release-course-day-1",
+      "title": "压力释放 · 第 1 天",
+      "subtitle": "课程原型，先松开第一层用力",
+      "teacher": "At Ease 深度内容",
+      "theme": "emotion",
+      "durationSeconds": 720,
+      "audioKind": "scripted",
+      "isSubscriptionRequired": true,
+      "steps": [
+        { "id": "arrive", "title": "进入", "text": "先坐在一个不被打扰的位置。", "durationSeconds": 120, "hapticEnabled": true },
+        { "id": "notice", "title": "观察", "text": "找出身体里最用力的一个点。", "durationSeconds": 180, "hapticEnabled": true },
+        { "id": "release", "title": "放下", "text": "呼气时，让它少用力一点。", "durationSeconds": 180, "hapticEnabled": true },
+        { "id": "close", "title": "收尾", "text": "不用立刻解决什么，先把今天这一步完成。", "durationSeconds": 240, "hapticEnabled": false }
+      ]
+    },
+    {
+      "id": "deep-body-scan-1080",
+      "title": "深度身体扫描",
+      "subtitle": "十八分钟，慢慢经过身体",
+      "teacher": "At Ease 深度内容",
+      "theme": "sleep",
+      "durationSeconds": 1080,
+      "audioKind": "scripted",
+      "isSubscriptionRequired": true,
+      "steps": [
+        { "id": "settle", "title": "安顿", "text": "让身体得到足够的支撑。", "durationSeconds": 180, "hapticEnabled": true },
+        { "id": "head", "title": "头颈", "text": "眼睛放松，下颌放松。", "durationSeconds": 180, "hapticEnabled": true },
+        { "id": "chest", "title": "胸腹", "text": "允许呼吸自己发生。", "durationSeconds": 180, "hapticEnabled": false },
+        { "id": "arms", "title": "手臂", "text": "手指不再抓着什么。", "durationSeconds": 180, "hapticEnabled": true },
+        { "id": "legs", "title": "腿足", "text": "重量交给地面。", "durationSeconds": 180, "hapticEnabled": false },
+        { "id": "whole", "title": "整体", "text": "感受整个身体一起休息。", "durationSeconds": 180, "hapticEnabled": false }
+      ]
+    },
+    {
+      "id": "sleep-story-lighthouse-900",
+      "title": "睡前故事 · 夜里的灯塔",
+      "subtitle": "缓慢低情节，适合睡前",
+      "teacher": "At Ease 深度内容",
+      "theme": "sleep",
+      "durationSeconds": 900,
+      "audioKind": "scripted",
+      "isSubscriptionRequired": true,
+      "steps": [
+        { "id": "coast", "title": "海岸", "text": "远处有一座灯塔，光慢慢转过来。", "durationSeconds": 120, "hapticEnabled": false },
+        { "id": "room", "title": "房间", "text": "灯塔里的人放下茶杯，看向海面。", "durationSeconds": 180, "hapticEnabled": false },
+        { "id": "boat", "title": "船", "text": "一艘小船驶过，没有需要着急的事。", "durationSeconds": 180, "hapticEnabled": false },
+        { "id": "light", "title": "光", "text": "光继续转动，不催促任何东西。", "durationSeconds": 180, "hapticEnabled": false },
+        { "id": "rest", "title": "休息", "text": "房间安静下来，海岸也安静下来。", "durationSeconds": 240, "hapticEnabled": false }
+      ]
     }
   ]
 }

@@ -10,6 +10,7 @@ struct AtEaseRootView: View {
     @State private var selectedMood: Int?
     @State private var recommendationEngine = RecommendationEngine()
     @State private var hapticPlayer: any AtEaseHapticPlayer = SystemAtEaseHapticPlayer()
+    @StateObject private var subscription = AtEaseSubscriptionService()
 
     var body: some View {
         TabView {
@@ -25,7 +26,11 @@ struct AtEaseRootView: View {
             }
 
             NavigationStack {
-                PracticeView(hapticsEnabled: hapticsEnabled, defaultMinutes: defaultMinutes)
+                PracticeView(
+                    hapticsEnabled: hapticsEnabled,
+                    defaultMinutes: defaultMinutes,
+                    isSubscribed: subscription.isSubscribed
+                )
             }
             .tabItem {
                 Label("练习", systemImage: "leaf")
@@ -47,6 +52,10 @@ struct AtEaseRootView: View {
         }
         .scrollContentBackground(.hidden)
         .background(AtEaseDesignTokens.canvas)
+        .environmentObject(subscription)
+        .task {
+            await subscription.refresh()
+        }
         .fullScreenCover(isPresented: Binding(
             get: { !hasCompletedOnboarding },
             set: {

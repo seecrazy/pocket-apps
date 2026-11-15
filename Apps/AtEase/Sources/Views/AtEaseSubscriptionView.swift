@@ -3,7 +3,7 @@ import SwiftUI
 
 struct AtEaseSubscriptionView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var subscription = AtEaseSubscriptionService()
+    @EnvironmentObject private var subscription: AtEaseSubscriptionService
 
     var body: some View {
         ScrollView {

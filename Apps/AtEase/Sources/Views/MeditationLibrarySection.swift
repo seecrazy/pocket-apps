@@ -5,31 +5,19 @@ import SwiftUI
 
 struct MeditationLibrarySection: View {
     let hapticsEnabled: Bool
+    let isSubscribed: Bool
     @Binding var activeItem: MeditationContentItem?
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var subscription: AtEaseSubscriptionService
 
     @Query(sort: \GuidedContentStateModel.lastPlayedAt, order: .reverse) private var states: [GuidedContentStateModel]
     @State private var manifest: AtEaseContentManifest?
     @State private var loadError: String?
-    @State private var filter: LibraryFilter = .all
+    @State private var filter: MeditationLibraryFilter = .all
+    @State private var showSubscription = false
 
     private let loader = MeditationContentCatalogLoader()
-
-    enum LibraryFilter: String, CaseIterable, Identifiable {
-        case all
-        case favorites
-
-        var id: String {
-            rawValue
-        }
-
-        var title: String {
-            switch self {
-            case .all: return "全部"
-            case .favorites: return "收藏"
-            }
-        }
-    }
+    private let accessService = MeditationContentAccessService()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -38,13 +26,13 @@ struct MeditationLibrarySection: View {
                     .font(.title2.weight(.light))
                     .foregroundStyle(AtEaseDesignTokens.textPrimary)
                 Spacer()
-                Text("\(items.count) 条免费")
+                Text("\(items.count) 条可用")
                     .font(.caption)
                     .foregroundStyle(AtEaseDesignTokens.textSecondary)
             }
 
             Picker("过滤", selection: $filter) {
-                ForEach(LibraryFilter.allCases) { filter in
+                ForEach(MeditationLibraryFilter.allCases) { filter in
                     Text(filter.title).tag(filter)
                 }
             }
@@ -71,8 +59,16 @@ struct MeditationLibrarySection: View {
                             item: item,
                             isFavorite: state(for: item)?.isFavorite ?? false,
                             hasCompleted: state(for: item)?.isCompleted ?? false,
+                            isLocked: !accessService.canPlay(item, isSubscribed: isSubscribed),
                             onToggleFavorite: { toggleFavorite(item) },
-                            onPlay: { activeItem = item }
+                            onPlay: {
+                                if accessService.canPlay(item, isSubscribed: isSubscribed) {
+                                    activeItem = item
+                                }
+                            },
+                            onSubscribe: {
+                                showSubscription = true
+                            }
                         )
                     }
                 }
@@ -80,6 +76,11 @@ struct MeditationLibrarySection: View {
         }
         .onAppear {
             loadCatalog()
+        }
+        .sheet(isPresented: $showSubscription) {
+            NavigationStack {
+                AtEaseSubscriptionView()
+            }
         }
         .alert(
             "内容加载失败",
@@ -100,10 +101,13 @@ struct MeditationLibrarySection: View {
 
     private var items: [MeditationContentItem] {
         guard let manifest else { return [] }
-        let free = manifest.items.filter { !$0.isSubscriptionRequired }
-        guard filter == .favorites else { return free }
         let favoriteIDs = Set(states.filter(\.isFavorite).map(\.contentID))
-        return free.filter { favoriteIDs.contains($0.id) }
+        return accessService.visibleItems(
+            from: manifest,
+            filter: filter,
+            favoriteContentIDs: favoriteIDs,
+            isSubscribed: isSubscribed
+        )
     }
 
     private func loadCatalog() {
@@ -140,8 +144,10 @@ struct MeditationContentCard: View {
     let item: MeditationContentItem
     let isFavorite: Bool
     let hasCompleted: Bool
+    let isLocked: Bool
     let onToggleFavorite: () -> Void
     let onPlay: () -> Void
+    let onSubscribe: () -> Void
 
     var body: some View {
         CardContainer {
@@ -160,6 +166,13 @@ struct MeditationContentCard: View {
                             if hasCompleted {
                                 StatusBarChip(text: "已完成", systemImage: "checkmark", tint: .green)
                             }
+                            if isLocked {
+                                StatusBarChip(
+                                    text: "订阅",
+                                    systemImage: "lock",
+                                    tint: AtEaseDesignTokens.textSecondary
+                                )
+                            }
                         }
                     }
                     Spacer()
@@ -176,8 +189,24 @@ struct MeditationContentCard: View {
                     .font(.caption)
                     .foregroundStyle(AtEaseDesignTokens.textSecondary)
 
-                PrimaryButton("开始") {
-                    onPlay()
+                if isLocked {
+                    Button {
+                        onSubscribe()
+                    } label: {
+                        HStack {
+                            Image(systemName: "lock")
+                            Text("订阅解锁")
+                        }
+                        .font(.headline.weight(.medium))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(AtEaseDesignTokens.accentBreath)
+                } else {
+                    PrimaryButton("开始") {
+                        onPlay()
+                    }
                 }
             }
         }

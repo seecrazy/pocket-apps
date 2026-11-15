@@ -4,13 +4,13 @@
   <img alt="iOS" src="https://img.shields.io/badge/iOS-17%2B-0A84FF">
   <img alt="SwiftUI" src="https://img.shields.io/badge/UI-SwiftUI-32ADE6">
   <img alt="SwiftData" src="https://img.shields.io/badge/Data-SwiftData-0A84FF">
-  <img alt="Version" src="https://img.shields.io/badge/Version-0.5.0-8E8E93">
-  <img alt="Status" src="https://img.shields.io/badge/Status-Subscription_Foundation-34C759">
+  <img alt="Version" src="https://img.shields.io/badge/Version-0.6.0-8E8E93">
+  <img alt="Status" src="https://img.shields.io/badge/Status-Subscription_Content_Distribution-34C759">
 </p>
 
 > 每天一分钟，心安一下。
 
-At Ease 是一款低门槛、不制造压力的极简冥想 App。当前版本完成呼吸、计时器、情绪签到、非声音练习、系统级触觉/健康/锁屏集成、5 条免费引导冥想，以及 StoreKit 2 订阅底座。真实订阅内容资产在后续阶段上架。
+At Ease 是一款低门槛、不制造压力的极简冥想 App。当前版本完成呼吸、计时器、情绪签到、非声音练习、系统级触觉/健康/锁屏集成、5 条免费引导冥想、3 条订阅深度内容原型，以及订阅状态驱动的内容解锁。
 
 ## 目录
 
@@ -89,6 +89,14 @@ open PocketApps.xcworkspace
 - 第 3 次练习后的收尾卡片只显示一行低调入口。
 - 无网、加载失败或恢复失败不阻断任何免费练习。
 
+### 订阅内容分发（v0.6）
+- 订阅层新增 3 条深度内容原型：压力释放课程、深度身体扫描、睡前故事。
+- `MeditationContentAccessService` 统一判断免费与订阅内容可播放性。
+- 未订阅时可浏览订阅内容，但只显示克制的“订阅解锁”入口。
+- 已订阅后内容列表自动解锁，无需重启。
+- 订阅过期后自动回到锁定状态，收藏、完成状态和练习记录保留。
+- 播放器二次校验授权，避免 UI 判断遗漏。
+
 ## 体验架构
 
 ```text
@@ -130,10 +138,10 @@ App 启动
 - Bundle ID：`com.pocketapps.atease`
 - UI：SwiftUI
 - 存储：SwiftData / App 沙盒
-- 内容：bundled JSON manifest + schema 校验
-- 服务：呼吸节奏、内容加载与校验、脚本播放器、下载底座、HealthKit、Live Activity、Core Haptics
+- 内容：bundled JSON manifest + schema 校验 + 访问判定
+- 服务：呼吸节奏、内容加载与校验、脚本播放器、内容访问、下载底座、HealthKit、Live Activity、Core Haptics
 - 设计令牌：暖灰画布、近黑呼吸页、雾蓝强调、五级情绪色
-- 订阅：StoreKit 2、可注入 provider、UserDefaults 状态缓存
+- 订阅：StoreKit 2、可注入 provider、UserDefaults 状态缓存、内容分层
 
 完整产品与 UI 设计见 [docs/DESIGN.md](docs/DESIGN.md)。
 
@@ -161,6 +169,8 @@ At Ease 当前覆盖点：
 - `GuidedContentStateModel` 用户态。
 - 订阅状态缓存、刷新、购买失败保留状态、恢复成功/无购买反馈。
 - 第 3 次练习后显示低调订阅入口的规则。
+- 内容访问判定与免费 / 订阅分层。
+- 内置内容包含 5 条免费和 3 条订阅条目。
 
 ## Roadmap
 
@@ -170,10 +180,11 @@ At Ease 当前覆盖点：
 - `v0.3`：念头放下、触摸身体扫描、环境音混音。
 - `v0.4`：引导冥想内容基础设施。
 - `v0.5`：StoreKit 2 订阅底座、状态缓存、恢复购买、低调订阅入口。
+- `v0.6`：订阅内容接入、访问判定、锁定/解锁联动、播放器二次校验。
 
 ### 下一步
 - 配置 App Store Connect 月度 / 年度订阅与 7 天试用。
-- 接入真实睡眠故事或多周课程。
+- 接入正式导师音频、睡眠故事与完整多周课程。
 - `v1.0`：稳定性、无障碍、合规、截图、TestFlight 与审核。
 
 发布原则：

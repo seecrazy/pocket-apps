@@ -36,6 +36,7 @@ final class AVAudioPlayerAdapter: MeditationAudioPlaying {
     private var player: AVAudioPlayer?
 
     func play(url: URL) throws {
+        try activateAudioSession()
         let newPlayer = try AVAudioPlayer(contentsOf: url)
         newPlayer.numberOfLoops = -1
         newPlayer.prepareToPlay()
@@ -55,6 +56,22 @@ final class AVAudioPlayerAdapter: MeditationAudioPlaying {
 
     func stop() {
         player?.stop()
+        try? AVAudioSession.sharedInstance().setActive(
+            false,
+            options: [.notifyOthersOnDeactivation]
+        )
+    }
+
+    private func activateAudioSession() throws {
+        try AVAudioSession.sharedInstance().setCategory(
+            .playback,
+            mode: .spokenAudio,
+            options: [.duckOthers, .mixWithOthers]
+        )
+        try AVAudioSession.sharedInstance().setActive(
+            true,
+            options: [.notifyOthersOnDeactivation]
+        )
     }
 }
 

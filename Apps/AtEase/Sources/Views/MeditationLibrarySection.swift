@@ -192,7 +192,7 @@ struct MeditationContentCard: View {
                         Image(systemName: isFavorite ? "star.fill" : "star")
                             .foregroundStyle(.yellow)
                     }
-                    .accessibilityLabel(isFavorite ? "取消收藏" : "收藏")
+                    .accessibilityLabel("\(item.title)，\(isFavorite ? "取消收藏" : "收藏")")
                 }
 
                 Text(item.teacher)
@@ -213,6 +213,7 @@ struct MeditationContentCard: View {
                     }
                     .buttonStyle(.bordered)
                     .tint(AtEaseDesignTokens.accentBreath)
+                    .accessibilityLabel("\(item.title)，订阅解锁")
                 } else {
                     PrimaryButton("开始") {
                         onPlay()

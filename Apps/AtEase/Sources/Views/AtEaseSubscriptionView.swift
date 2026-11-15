@@ -118,6 +118,7 @@ struct AtEaseSubscriptionView: View {
                         }
                     }
                     .disabled(subscription.isWorking)
+                    .accessibilityLabel("\(product.displayName)，选择")
                 }
             }
         }

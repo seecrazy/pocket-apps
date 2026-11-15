@@ -822,6 +822,104 @@ predownloadCurrentID
 - 播放器内下载并退出后，列表显示已离线。
 - 设置页、离线音频页、练习列表状态一致。
 
+## 7.8 v1.0 发布就绪
+
+### 目标与非目标
+
+目标：
+
+- 让远程冥想音频在锁屏、切后台和静音场景下可靠播放。
+- 补齐 App Store 隐私清单中的文件时间戳 API 声明。
+- 补齐主要图标按钮和内容操作的 VoiceOver 可访问性。
+- 建立 v1.0 发布门槛：版本、隐私、内容、App Store 元数据、fastlane 发布路径可验证。
+- 保留真实音频资产、App Store Connect 产品配置和签名资源作为外部发布步骤。
+
+非目标：
+
+- 不接入统计 SDK 或账号体系。
+- 不改变 v0.x 的订阅提示与免费体验约束。
+- 不承诺真实导师音频；当前内容仍是结构化引导原型。
+- 不在仓库中存储签名证书。
+
+### 后台音频
+
+App target 增加：
+
+```xml
+<key>UIBackgroundModes</key>
+<array>
+  <string>audio</string>
+</array>
+```
+
+`AVAudioPlayerAdapter` 播放前激活音频会话：
+
+1. category 使用 `.playback`。
+2. mode 使用 `.spokenAudio`。
+3. options 使用 `.duckOthers` 与 `.mixWithOthers`。
+4. 失败不阻断结构化引导，只显示音频准备失败。
+
+适用场景：
+
+- 睡前故事或长冥想锁屏播放。
+- 切后台后继续播放。
+- 通话或系统中断由系统接管，恢复后用户可继续。
+
+### 隐私清单
+
+新增 required reason API 声明：
+
+| API | 用途 | Reason |
+|---|---|---|
+| UserDefaults | 音景预设、触觉/语音/预下载偏好 | `CA92.1` |
+| File timestamp | 显示音频缓存文件大小与修改时间，清理本地缓存 | `C617.1` |
+
+仍然保持：
+
+1. `NSPrivacyTracking = false`。
+2. tracking domains 为空。
+3. collected data types 为空。
+4. 无统计、广告、第三方后端。
+
+### 无障碍
+
+所有只有图标的主操作必须提供语义标签：
+
+| 场景 | 标签 |
+|---|---|
+| 非声音练习关闭 | 关闭 |
+| 计时器关闭 | 关闭计时器 |
+| 念头放下关闭 | 关闭 |
+| 音频缓存清理 | 清理全部音频缓存 |
+| 收藏 | `<内容标题>，收藏/取消收藏` |
+| 订阅卡片 | `<内容标题>，订阅解锁` |
+| 音频下载 | `<内容标题>，下载/删除` |
+| 订阅产品 | `<产品名称>，选择` |
+
+原则：
+
+1. VoiceOver 语义可独立理解，不依赖图标。
+2. 文案保持中性，不添加警告或催促语气。
+3. 免费内容、订阅锁定、下载状态都可通过可读标签区分。
+
+### 发布门槛
+
+仓库内通过：
+
+1. `MeditationContentValidator` 校验内容。
+2. release preflight 校验 icon、隐私清单、metadata、workspace、lint、测试与构建。
+3. release audit 测试校验隐私清单不追踪、不采集，并声明必需 API。
+4. release audit 测试校验内置目录没有占位远程 URL。
+
+仓库外仍需人工完成：
+
+1. Apple Developer 签名与 App Store Connect App 记录。
+2. 月度 / 年度订阅产品与 7 天试用配置。
+3. 正式音频资产、CDN 与授权台账。
+4. iPhone / iPad 真机回归。
+5. App Store 截图与隐私问卷提交。
+6. TestFlight 冒烟验证。
+
 ## 8. 技术架构
 
 - iOS 17+
@@ -837,8 +935,9 @@ predownloadCurrentID
 - MeditationAudioDownloadManager 音频下载与预下载管理
 - MeditationContentAccessService 内容访问判定
 - BGTaskScheduler 后续实现
+- UIBackgroundModes audio 后台冥想音频
 
-当前 v0.9 已支持可选顺序预下载、App 级缓存状态联动与离线状态展示；OS 级后台任务与正式资产仍在后续版本。
+当前 v1.0 已支持仓库内发布就绪：可选预下载、缓存联动、后台音频、隐私声明、无障碍与发布门槛；真实资产、商店产品和签名仍需外部账号配置。
 
 ## 9. 命名
 
@@ -866,6 +965,7 @@ At Ease 按六个阶段推进，避免一开始做成内容库：
 | `0.7` | 远程音频与离线播放 | remoteAudio schema、沙盒下载、离线复用、播放底座 |
 | `0.8` | 音频下载管理 | 缓存列表、大小、删除、清理全部、订阅锁定规则 |
 | `0.9` | 可选预下载与状态联动 | 共享缓存状态、可选顺序预下载、取消、列表离线状态 |
+| `1.0` | 公开发布准备 | 后台音频、隐私声明、无障碍、release audit、发布门槛 |
 | `1.0` | 公开发布 | 稳定性、无障碍、合规、截图、TestFlight 与审核 |
 
 版本推进约束：
@@ -897,6 +997,9 @@ At Ease 按六个阶段推进，避免一开始做成内容库：
 | 预下载 | 可选顺序预下载、取消、订阅权限过滤 | ✅ |
 | 订阅 | StoreKit 2 分层、缓存、恢复购买、低调入口 | ✅ |
 | 内容分发 | 访问判定、锁定卡片、播放器二次校验 | ✅ |
+| 后台音频 | UIBackgroundModes audio、播放会话激活 | ✅ |
+| 无障碍 | 图标操作标签、内容语义标签、缓存操作语义 | ✅ |
+| 发布就绪 | privacy audit、无占位 URL、元数据与 fastlane 路径 | ✅ |
 
 ## 12. 验收清单
 
@@ -940,5 +1043,10 @@ At Ease 按六个阶段推进，避免一开始做成内容库：
 - [x] 删除单条与清理全部只影响缓存，不影响练习记录。
 - [x] App 级缓存状态在练习列表、播放器和设置页联动。
 - [x] 可选预下载默认关闭，逐条处理可访问内容。
+- [x] 后台音频模式与会话激活。
+- [x] 隐私清单不追踪、不采集，并声明 UserDefaults 与文件时间戳。
+- [x] 主要图标操作和内容操作有 VoiceOver 标签。
+- [x] 内置目录没有占位远程 URL。
+- [x] release preflight 与 release audit 测试通过。
 - [x] 单元测试通过。
 - [x] 无第三方运行时依赖。

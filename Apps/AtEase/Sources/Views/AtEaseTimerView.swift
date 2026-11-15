@@ -37,6 +37,7 @@ struct AtEaseTimerView: View {
                             .font(.body)
                             .foregroundStyle(.white.opacity(0.4))
                     }
+                    .accessibilityLabel("关闭计时器")
                     .padding(.leading, 24)
 
                     Spacer()

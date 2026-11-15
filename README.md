@@ -10,7 +10,7 @@
 
 `pocket-apps` 是一组小而美的 iOS 工具与体验类 App。仓库采用 **Tuist Workspace + 本地 Swift Package + SwiftUI/SwiftData**，每个 App 都是独立 target，拥有独立 Bundle ID、版本号、图标、隐私清单和发布节奏。
 
-**当前状态**：v1.1 工程内发布准备完成；五个 App 已通过本机 release preflight。实际 TestFlight / App Store 发布仍需 Apple 开发者账号与签名资源。
+**当前状态**：工程内发布准备完成；六个 App 已通过本机 release preflight。At Ease 已进入 v1.0 发布门槛。实际 TestFlight / App Store 发布仍需 Apple 开发者账号、订阅产品与签名资源。
 
 ## 目录
 
@@ -33,14 +33,14 @@
 
 ## 产品
 
-| App | 副标题 | v1.3 能力 | Bundle ID | 版本 |
+| App | 副标题 | 能力 | Bundle ID | 版本 |
 |---|---|---|---|---|
 | SoloGuard | 独居守护 | 守护联系人编辑、主联系人管理、安全状态卡、签到趋势 | `com.pocketapps.sologuard` | `1.3.0` |
 | FocusBox | 专注盒子 | 专注意图、暂停恢复、进度环、连续专注天数 | `com.pocketapps.focusbox` | `1.3.0` |
 | SlowCard | 慢递明信片 | 延迟解锁卡片、到达倒计时、收藏、归档、写作提示 | `com.pocketapps.slowcard` | `1.3.0` |
 | AmbientLog | 环境音记录仪 | 后台录音、实时计时、dBFS 波形、文件导出 | `com.pocketapps.ambientlog` | `1.3.0` |
 | TabStash iOS | 标签收纳 | JSON 导入/导出、集合管理、批量已读、搜索 | `com.pocketapps.tabstash` | `1.3.0` |
-| At Ease（心安） | 冥想 · 呼吸 · 助眠 | 呼吸、计时器、情绪签到、本地进度、触觉、Live Activity、环境音、引导冥想、订阅分层、离线音频、缓存管理、可选预下载 | `com.pocketapps.atease` | `0.9.0` |
+| At Ease（心安） | 冥想 · 呼吸 · 助眠 | 呼吸、计时器、情绪签到、本地进度、触觉、Live Activity、环境音、引导冥想、订阅分层、离线音频、缓存管理、可选预下载、后台音频 | `com.pocketapps.atease` | `1.0.0` |
 
 每个 App 都有独立的 README、设计文档和进度文档：
 
@@ -59,15 +59,16 @@ TabStash 当前使用本地 JSON 文件作为插件与 iOS 之间的数据交换
 
 仓库内工程发布项已完成：
 
-- 五个 App 可构建、可运行，单元测试通过。
+- 六个 App 可构建、可运行，单元测试通过。
 - 每个 App 都有独立 1024×1024 App Icon。
 - 每个 App 都包含 `PrivacyInfo.xcprivacy`。
 - 权限拒绝、空数据、文件错误和录音中断都有明确 UI 反馈。
 - 破坏性操作均需要确认。
 - `ITSAppUsesNonExemptEncryption=false`。
 - AmbientLog 声明了 `NSMicrophoneUsageDescription`。
-- fastlane metadata 包含五个 App 的 App Store 文案骨架。
-- 五个 App 有一次性首启说明和设置页。
+- fastlane metadata 包含六个 App 的 App Store 文案骨架。
+- 六个 App 有一次性首启说明和设置页。
+- At Ease 提供 [App Store 发布门槛](Apps/AtEase/docs/APP_STORE.md)。
 
 实际提交 App Store 还需要 Apple 开发者账号、签名证书、App Store Connect API Key、截图和隐私问卷。
 

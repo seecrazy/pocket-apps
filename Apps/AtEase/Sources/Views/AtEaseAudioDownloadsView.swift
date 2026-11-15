@@ -72,6 +72,7 @@ struct AtEaseAudioDownloadsView: View {
             .foregroundStyle(AtEaseDesignTokens.textPrimary)
             .disabled(manager.downloadedCount == 0 || manager.isLoading)
             .padding(.top, 4)
+            .accessibilityLabel("清理全部音频缓存")
 
             Text("清理只删除音频文件，不会删除练习记录。")
                 .font(.footnote)
@@ -151,6 +152,7 @@ private struct AudioDownloadCard: View {
                 .font(.footnote)
                 .foregroundStyle(AtEaseDesignTokens.textSecondary)
                 .disabled(true)
+                .accessibilityLabel("\(item.title)，订阅解锁")
         } else {
             switch state {
             case .idle where !item.isDownloaded, .failed:
@@ -159,6 +161,7 @@ private struct AudioDownloadCard: View {
                 }
                 .font(.footnote)
                 .foregroundStyle(AtEaseDesignTokens.textPrimary)
+                .accessibilityLabel("\(item.title)，下载")
 
             case .downloading:
                 HStack(spacing: 8) {
@@ -174,6 +177,7 @@ private struct AudioDownloadCard: View {
                 }
                 .font(.footnote)
                 .foregroundStyle(AtEaseDesignTokens.textSecondary)
+                .accessibilityLabel("\(item.title)，删除")
 
             default:
                 Button("下载") {
@@ -181,6 +185,7 @@ private struct AudioDownloadCard: View {
                 }
                 .font(.footnote)
                 .foregroundStyle(AtEaseDesignTokens.textPrimary)
+                .accessibilityLabel("\(item.title)，下载")
             }
         }
     }

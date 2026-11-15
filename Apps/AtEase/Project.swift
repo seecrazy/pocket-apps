@@ -6,7 +6,7 @@ let metadata = AppMetadata(
     displayName: "At Ease",
     subtitle: "冥想 · 呼吸 · 助眠",
     bundleID: "com.pocketapps.atease",
-    version: "0.9.0",
+    version: "1.0.0",
     buildNumber: 1
 )
 
@@ -28,6 +28,7 @@ let appInfoPlist: InfoPlist = .extendingDefault(
         "ITSAppUsesNonExemptEncryption": .boolean(false),
         "NSSupportsLiveActivities": .boolean(true),
         "NSSupportsLiveActivitiesFrequentUpdates": .boolean(false),
+        "UIBackgroundModes": .array([.string("audio")]),
         "NSHealthShareUsageDescription": .string("At Ease 不会读取你的健康数据。当前功能只需要在授权后写入正念分钟。"),
         "NSHealthUpdateUsageDescription": .string("在你完成呼吸或计时练习后，写入对应的正念分钟。"),
     ]

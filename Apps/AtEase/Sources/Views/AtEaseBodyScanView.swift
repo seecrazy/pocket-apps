@@ -27,6 +27,7 @@ struct AtEaseBodyScanView: View {
                             .font(.body)
                             .foregroundStyle(AtEaseDesignTokens.textSecondary.opacity(0.4))
                     }
+                    .accessibilityLabel("关闭")
                     .padding(.leading, 24)
                     Spacer()
                 }

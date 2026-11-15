@@ -1,12 +1,12 @@
 # At Ease 进度文档
 
-> 当前版本：0.9.0
-> 状态：可选预下载与缓存状态联动完成，等待正式音频资产、OS 级后台预下载、CDN 与 App Store Connect 产品
+> 当前版本：1.0.0
+> 状态：仓库内发布就绪；等待开发者账号、App Store Connect 订阅、正式音频资产与签名
 > 最后更新：2026-11-15
 
 ## 当前摘要
 
-At Ease 已完成 v0.1–v0.9 的核心路径：无登录呼吸/计时、情绪签到、本地进度、可选语音、Core Haptics、HealthKit、Live Activity、非声音练习、环境音混音、5 条免费结构化引导冥想、StoreKit 2 订阅底座、3 条订阅深度内容原型的锁定 / 解锁分发、远程音频下载与离线播放底座、音频缓存管理，以及可选顺序预下载。正式订阅音频、OS 级后台预下载、CDN 分发、App Store Connect 产品配置和 TestFlight 发布仍在后续阶段。
+At Ease 已完成 v0.1–v1.0 的仓库内发布路径：无登录呼吸/计时、情绪签到、本地进度、可选语音、Core Haptics、HealthKit、Live Activity、非声音练习、环境音混音、5 条免费结构化引导冥想、StoreKit 2 订阅底座、3 条订阅深度内容原型的锁定 / 解锁分发、远程音频下载与离线播放底座、音频缓存管理、可选顺序预下载、后台音频、无障碍标签、隐私审计与 App Store 发布门槛。正式订阅音频、CDN、订阅产品配置和 TestFlight 发布仍需外部账号资源。
 
 ## 已完成
 
@@ -164,6 +164,30 @@ At Ease 已完成 v0.1–v0.9 的核心路径：无登录呼吸/计时、情绪�
 - [x] scripted / bundled 不显示缓存状态。
 - [x] 预下载权限过滤、失败继续、取消与已下载跳过测试。
 
+### v1.0 — 发布就绪
+
+- [x] App target 增加 `UIBackgroundModes: audio`。
+- [x] `AVAudioPlayerAdapter` 播放前激活 `.playback` 音频会话。
+- [x] 远程音频支持锁屏与切后台继续播放。
+- [x] 停止播放时释放音频会话。
+- [x] 隐私清单新增 `NSPrivacyAccessedAPICategoryFileTimestamp`。
+- [x] 隐私清单保留 `CA92.1` 与 `C617.1` reason。
+- [x] 身体扫描关闭按钮补齐“关闭”标签。
+- [x] 计时器关闭按钮补齐“关闭计时器”标签。
+- [x] 念头放下关闭按钮补齐“关闭”标签。
+- [x] 音频缓存清理全部补齐语义标签。
+- [x] 收藏按钮包含内容标题与收藏状态。
+- [x] 订阅内容卡片包含内容标题与订阅解锁语义。
+- [x] 订阅产品选择按钮包含产品名称。
+- [x] 音频下载 / 删除按钮包含内容标题。
+- [x] 新增 release audit 测试验证隐私清单。
+- [x] release audit 测试验证后台音频模式。
+- [x] release audit 测试验证订阅产品 ID。
+- [x] release audit 测试验证内置目录没有占位远程 URL。
+- [x] release audit 测试验证版本号 `1.0.0`。
+- [x] 新增 `docs/APP_STORE.md` 发布门槛。
+- [x] 根隐私文档补充 At Ease 与后台音频、HealthKit。
+
 ### 发布前
 
 - [ ] 真机验证 Core Haptics、HealthKit、Live Activity。
@@ -184,6 +208,7 @@ At Ease 已完成 v0.1–v0.9 的核心路径：无登录呼吸/计时、情绪�
 | `0.7` | 远程音频与离线播放 | ✅ 代码完成，CDN 与正式资产待上架 |
 | `0.8` | 音频下载管理 | ✅ 已完成 |
 | `0.9` | 可选预下载与状态联动 | ✅ 已完成 |
+| `1.0` | 发布就绪 | ✅ 仓库内完成；签名/订阅/资产待外部配置 |
 | `1.0` | 公开发布 | ⏳ |
 
 ## 验证状态
@@ -191,7 +216,7 @@ At Ease 已完成 v0.1–v0.9 的核心路径：无登录呼吸/计时、情绪�
 最近一次 At Ease 单元测试：
 
 ```text
-Executed 55 tests, with 0 failures
+Executed 60 tests, with 0 failures
 ** TEST SUCCEEDED **
 ```
 

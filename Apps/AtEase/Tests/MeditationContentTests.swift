@@ -7,7 +7,7 @@ final class MeditationContentTests: XCTestCase {
     func testBundledCatalogLoadsAndIsValid() throws {
         let manifest = try loader.loadBundledCatalog()
 
-        XCTAssertEqual(manifest.schemaVersion, 1)
+        XCTAssertEqual(manifest.schemaVersion, 2)
         XCTAssertEqual(manifest.items.count, 8)
         XCTAssertEqual(manifest.items.filter { !$0.isSubscriptionRequired }.count, 5)
         XCTAssertEqual(manifest.items.filter(\.isSubscriptionRequired).count, 3)
@@ -20,7 +20,7 @@ final class MeditationContentTests: XCTestCase {
 
     func testRejectsUnsupportedSchemaVersion() throws {
         let manifest = try AtEaseContentManifest(
-            schemaVersion: 2,
+            schemaVersion: 3,
             items: [makeItem()]
         )
 
@@ -29,7 +29,7 @@ final class MeditationContentTests: XCTestCase {
 
     func testRejectsDuplicateContentIDs() throws {
         let item = try makeItem()
-        let manifest = AtEaseContentManifest(schemaVersion: 1, items: [item, item])
+        let manifest = AtEaseContentManifest(schemaVersion: 2, items: [item, item])
 
         XCTAssertThrowsError(try MeditationContentValidator.validate(manifest))
     }
@@ -38,7 +38,7 @@ final class MeditationContentTests: XCTestCase {
         let item = try makeItem(steps: [
             MeditationContentStep(id: "step", title: "Step", text: "Text", durationSeconds: 30),
         ])
-        let manifest = AtEaseContentManifest(schemaVersion: 1, items: [item])
+        let manifest = AtEaseContentManifest(schemaVersion: 2, items: [item])
 
         XCTAssertThrowsError(try MeditationContentValidator.validate(manifest))
     }

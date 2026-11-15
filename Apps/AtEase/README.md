@@ -4,13 +4,13 @@
   <img alt="iOS" src="https://img.shields.io/badge/iOS-17%2B-0A84FF">
   <img alt="SwiftUI" src="https://img.shields.io/badge/UI-SwiftUI-32ADE6">
   <img alt="SwiftData" src="https://img.shields.io/badge/Data-SwiftData-0A84FF">
-  <img alt="Version" src="https://img.shields.io/badge/Version-0.6.0-8E8E93">
-  <img alt="Status" src="https://img.shields.io/badge/Status-Subscription_Content_Distribution-34C759">
+  <img alt="Version" src="https://img.shields.io/badge/Version-0.7.0-8E8E93">
+  <img alt="Status" src="https://img.shields.io/badge/Status-Remote_Audio_Foundation-34C759">
 </p>
 
 > 每天一分钟，心安一下。
 
-At Ease 是一款低门槛、不制造压力的极简冥想 App。当前版本完成呼吸、计时器、情绪签到、非声音练习、系统级触觉/健康/锁屏集成、5 条免费引导冥想、3 条订阅深度内容原型，以及订阅状态驱动的内容解锁。
+At Ease 是一款低门槛、不制造压力的极简冥想 App。当前版本完成呼吸、计时器、情绪签到、非声音练习、系统级触觉/健康/锁屏集成、5 条免费引导冥想、3 条订阅深度内容原型、订阅状态驱动的内容解锁，以及远程音频离线播放底座。
 
 ## 目录
 
@@ -97,6 +97,15 @@ open PocketApps.xcworkspace
 - 订阅过期后自动回到锁定状态，收藏、完成状态和练习记录保留。
 - 播放器二次校验授权，避免 UI 判断遗漏。
 
+### 远程音频与离线播放（v0.7）
+- 内容 schema 升级到 v2，支持 `remoteAudio` 元数据。
+- 远程音频必须使用 HTTPS，扩展名限定 m4a / mp3 / wav / aac。
+- 首次播放前下载到 App 沙盒，路径为 `Documents/Downloads/<contentID>/audio.<ext>`。
+- 下载成功后复用本地文件，后续播放不请求网络。
+- 下载中与失败状态使用克制文案，支持重试。
+- 下载失败不启动播放器，也不写入练习记录。
+- scripted / bundled 内容不触发下载。
+
 ## 体验架构
 
 ```text
@@ -127,6 +136,7 @@ App 启动
 | 情绪签到 | SwiftData / App 沙盒 | 否 |
 | 练习记录 | SwiftData / App 沙盒 | 否 |
 | 引导内容收藏与完成状态 | SwiftData / App 沙盒 | 否 |
+| 下载的订阅音频 | App 沙盒 / Documents | 否 |
 | 音景预设与设置偏好 | UserDefaults | 否 |
 | 可选正念分钟 | HealthKit，经用户授权 | 仅写入本机 Health 数据库 |
 
@@ -138,8 +148,8 @@ App 启动
 - Bundle ID：`com.pocketapps.atease`
 - UI：SwiftUI
 - 存储：SwiftData / App 沙盒
-- 内容：bundled JSON manifest + schema 校验 + 访问判定
-- 服务：呼吸节奏、内容加载与校验、脚本播放器、内容访问、下载底座、HealthKit、Live Activity、Core Haptics
+- 内容：bundled JSON manifest schema v2 + 访问判定 + remoteAudio
+- 服务：呼吸节奏、内容加载与校验、脚本播放器、内容访问、音频准备与播放、下载底座、HealthKit、Live Activity、Core Haptics
 - 设计令牌：暖灰画布、近黑呼吸页、雾蓝强调、五级情绪色
 - 订阅：StoreKit 2、可注入 provider、UserDefaults 状态缓存、内容分层
 
@@ -171,6 +181,7 @@ At Ease 当前覆盖点：
 - 第 3 次练习后显示低调订阅入口的规则。
 - 内容访问判定与免费 / 订阅分层。
 - 内置内容包含 5 条免费和 3 条订阅条目。
+- remoteAudio schema 校验、下载失败、本地复用与 scripted 免下载。
 
 ## Roadmap
 
@@ -181,10 +192,11 @@ At Ease 当前覆盖点：
 - `v0.4`：引导冥想内容基础设施。
 - `v0.5`：StoreKit 2 订阅底座、状态缓存、恢复购买、低调订阅入口。
 - `v0.6`：订阅内容接入、访问判定、锁定/解锁联动、播放器二次校验。
+- `v0.7`：remoteAudio schema、首次播放下载、本地缓存复用、播放底座。
 
 ### 下一步
 - 配置 App Store Connect 月度 / 年度订阅与 7 天试用。
-- 接入正式导师音频、睡眠故事与完整多周课程。
+- 接入正式导师音频、睡眠故事、完整多周课程与 CDN 分发。
 - `v1.0`：稳定性、无障碍、合规、截图、TestFlight 与审核。
 
 发布原则：

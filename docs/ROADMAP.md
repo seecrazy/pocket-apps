@@ -159,9 +159,10 @@
 - [x] v0.4：引导冥想内容 schema、5 条免费内容、播放器、收藏与下载底座。
 - [x] v0.5：StoreKit 2 订阅底座、状态缓存、恢复购买、第 3 次练习后的低调入口。
 - [x] v0.6：订阅内容接入、访问判定、锁定/解锁联动、播放器二次校验。
+- [x] v0.7：remoteAudio schema、首次播放下载、本地缓存复用与播放底座。
 - [ ] Core Haptics 真机精度验证。
 - [ ] HealthKit 授权状态与失败 UI。
-- [ ] 正式订阅内容音频资产与 App Store Connect 产品上架。
+- [ ] 正式订阅内容音频资产、CDN 分发与 App Store Connect 产品上架。
 
 ### TabStash
 

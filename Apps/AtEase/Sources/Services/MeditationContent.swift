@@ -75,10 +75,16 @@ struct MeditationContentItem: Codable, Equatable, Identifiable {
     var audioKind: MeditationAudioKind
     var isSubscriptionRequired: Bool
     var steps: [MeditationContentStep]
+    var remoteAudio: MeditationRemoteAudio?
+}
+
+struct MeditationRemoteAudio: Codable, Equatable {
+    var url: URL
+    var fileExtension: String
 }
 
 struct AtEaseContentManifest: Codable, Equatable {
-    static let currentSchemaVersion = 1
+    static let currentSchemaVersion = 2
 
     var schemaVersion: Int
     var items: [MeditationContentItem]
@@ -93,6 +99,8 @@ struct MeditationContentValidationError: Error, LocalizedError {
 }
 
 enum MeditationContentValidator {
+    private static let supportedAudioExtensions: Set<String> = ["m4a", "mp3", "wav", "aac"]
+
     static func validate(_ manifest: AtEaseContentManifest) throws {
         guard manifest.schemaVersion == AtEaseContentManifest.currentSchemaVersion else {
             throw MeditationContentValidationError(message: "内容 schema 版本不受支持。")
@@ -125,6 +133,22 @@ enum MeditationContentValidator {
             let stepIDs = item.steps.map(\.id)
             guard Set(stepIDs).count == stepIDs.count else {
                 throw MeditationContentValidationError(message: "内容步骤 ID 重复。")
+            }
+
+            if item.audioKind == .remote {
+                guard let remoteAudio = item.remoteAudio else {
+                    throw MeditationContentValidationError(message: "远程音频内容缺少 remoteAudio。")
+                }
+                guard remoteAudio.url.scheme?.lowercased() == "https" else {
+                    throw MeditationContentValidationError(message: "远程音频必须使用 HTTPS。")
+                }
+                guard supportedAudioExtensions.contains(remoteAudio.fileExtension.lowercased()) else {
+                    throw MeditationContentValidationError(message: "远程音频扩展名不受支持。")
+                }
+            } else {
+                guard item.remoteAudio == nil else {
+                    throw MeditationContentValidationError(message: "本地内容不能包含 remoteAudio。")
+                }
             }
         }
     }

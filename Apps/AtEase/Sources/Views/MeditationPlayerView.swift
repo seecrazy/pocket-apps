@@ -9,6 +9,7 @@ struct MeditationPlayerView: View {
     @Environment(\.modelContext) private var modelContext
     @StateObject private var player: MeditationScriptPlayer
     @StateObject private var audioGuide = AtEaseAudioGuide()
+    @StateObject private var audioPreparation: MeditationAudioPreparationService
     @State private var startedAt = Date()
     @State private var hapticPlayer: any AtEaseHapticPlayer = SystemAtEaseHapticPlayer()
     @State private var showSubscriptionEntry = false
@@ -21,6 +22,9 @@ struct MeditationPlayerView: View {
         self.item = item
         self.isSubscribed = isSubscribed
         _player = StateObject(wrappedValue: MeditationScriptPlayer(content: item))
+        _audioPreparation = StateObject(
+            wrappedValue: MeditationAudioPreparationService(downloadService: ContentDownloadService())
+        )
     }
 
     private let isSubscribed: Bool
@@ -63,6 +67,18 @@ struct MeditationPlayerView: View {
                         .foregroundStyle(.white.opacity(0.55))
                 }
 
+                if case .preparing = audioPreparation.state {
+                    Text("正在准备音频")
+                        .font(.footnote)
+                        .foregroundStyle(.white.opacity(0.55))
+                }
+
+                if case .failed = audioPreparation.state {
+                    Text("音频暂时无法准备")
+                        .font(.footnote)
+                        .foregroundStyle(.white.opacity(0.55))
+                }
+
                 if let step = player.playbackStep {
                     VStack(spacing: 18) {
                         Text(step.title)
@@ -97,15 +113,26 @@ struct MeditationPlayerView: View {
                 Spacer()
 
                 HStack(spacing: 32) {
-                    Button {
-                        player.status == .playing ? player.pause() : player.resume()
-                    } label: {
-                        Image(systemName: player.status == .playing ? "pause.fill" : "play.fill")
-                            .font(.title2)
-                            .foregroundStyle(.white.opacity(0.75))
+                    if isPreparingAudio {
+                        ProgressView()
                             .frame(width: 48, height: 48)
+                    } else {
+                        Button {
+                            if player.status == .playing {
+                                player.pause()
+                                audioPreparation.pause()
+                            } else {
+                                player.resume()
+                                audioPreparation.resume()
+                            }
+                        } label: {
+                            Image(systemName: player.status == .playing ? "pause.fill" : "play.fill")
+                                .font(.title2)
+                                .foregroundStyle(.white.opacity(0.75))
+                                .frame(width: 48, height: 48)
+                        }
+                        .accessibilityLabel(player.status == .playing ? "暂停" : "继续")
                     }
-                    .accessibilityLabel(player.status == .playing ? "暂停" : "继续")
 
                     Button {
                         saveProgress()
@@ -133,10 +160,15 @@ struct MeditationPlayerView: View {
             }
         }
         .preferredColorScheme(.dark)
-        .onAppear {
+        .task {
             guard accessService.canPlay(item, isSubscribed: isSubscribed) else {
                 isAccessDenied = true
                 return
+            }
+
+            if item.audioKind == .remote {
+                await audioPreparation.prepare(for: item)
+                guard audioPreparation.state == .ready else { return }
             }
 
             player.voiceEnabled = voiceGuidanceEnabled
@@ -152,6 +184,7 @@ struct MeditationPlayerView: View {
         .onChange(of: player.status) { _, status in
             if status == .completed {
                 saveProgress()
+                audioPreparation.stop()
             }
         }
         .sheet(isPresented: $showSubscription) {
@@ -161,6 +194,7 @@ struct MeditationPlayerView: View {
         }
         .onDisappear {
             player.stop()
+            audioPreparation.stop()
         }
     }
 
@@ -189,7 +223,7 @@ struct MeditationPlayerView: View {
                     lastPlayedAt: endedAt,
                     completedSeconds: seconds,
                     isCompleted: player.status == .completed,
-                    downloadState: ContentDownloadState.notApplicable.rawValue
+                    downloadState: localDownloadState.rawValue
                 )
             )
         }
@@ -205,4 +239,20 @@ struct MeditationPlayerView: View {
     }
 
     private let accessService = MeditationContentAccessService()
+
+    private var isPreparingAudio: Bool {
+        if case .preparing = audioPreparation.state {
+            return true
+        }
+        return false
+    }
+
+    private var localDownloadState: ContentDownloadState {
+        switch item.audioKind {
+        case .scripted, .bundled:
+            return .notApplicable
+        case .remote:
+            return audioPreparation.state == .ready ? .downloaded : .failed
+        }
+    }
 }

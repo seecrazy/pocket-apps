@@ -1,12 +1,12 @@
 # At Ease 进度文档
 
-> 当前版本：0.6.0
-> 状态：订阅内容分发完成，等待正式音频资产与 App Store Connect 产品
+> 当前版本：0.7.0
+> 状态：远程音频底座完成，等待正式音频资产、CDN 与 App Store Connect 产品
 > 最后更新：2026-11-15
 
 ## 当前摘要
 
-At Ease 已完成 v0.1–v0.6 的核心路径：无登录呼吸/计时、情绪签到、本地进度、可选语音、Core Haptics、HealthKit、Live Activity、非声音练习、环境音混音、5 条免费结构化引导冥想、StoreKit 2 订阅底座，以及 3 条订阅深度内容原型的锁定 / 解锁分发。正式订阅音频、App Store Connect 产品配置和 TestFlight 发布仍在后续阶段。
+At Ease 已完成 v0.1–v0.7 的核心路径：无登录呼吸/计时、情绪签到、本地进度、可选语音、Core Haptics、HealthKit、Live Activity、非声音练习、环境音混音、5 条免费结构化引导冥想、StoreKit 2 订阅底座、3 条订阅深度内容原型的锁定 / 解锁分发，以及远程音频下载与离线播放底座。正式订阅音频、CDN 分发、App Store Connect 产品配置和 TestFlight 发布仍在后续阶段。
 
 ## 已完成
 
@@ -95,6 +95,25 @@ At Ease 已完成 v0.1–v0.6 的核心路径：无登录呼吸/计时、情绪�
   - [x] 睡前故事 · 夜里的灯塔。
 - [x] 访问判定、分层列表和内置内容分层测试。
 
+### v0.7 — 远程音频与离线播放
+
+- [x] `AtEaseContentManifest` schema 升级到 v2。
+- [x] 新增 `MeditationRemoteAudio`：HTTPS URL 与安全扩展名。
+- [x] 校验 remote 内容必须带 `remoteAudio`。
+- [x] 校验本地内容不能携带 `remoteAudio`。
+- [x] 校验扩展名限定 `m4a`、`mp3`、`wav`、`aac`。
+- [x] 新增 `MeditationAudioPreparationService`。
+- [x] scripted / bundled 直接进入播放，不触发下载。
+- [x] remote 内容先检查本地缓存。
+- [x] 本地不存在时下载到 `Documents/Downloads/<contentID>/audio.<ext>`。
+- [x] 下载成功后写入 `downloaded` 状态。
+- [x] 下次播放复用本地文件，不重复下载。
+- [x] 下载失败显示“音频暂时无法准备”，不启动结构化播放，也不写练习记录。
+- [x] 播放中与暂停 / 继续同步控制本地音频。
+- [x] 播放结束或离开页面停止音频。
+- [x] 新增 `AVAudioPlayerAdapter` 与可替换的 `MeditationAudioPlaying` 协议。
+- [x] remoteAudio schema、下载失败、本地复用与 scripted 免下载测试。
+
 ### 发布前
 
 - [ ] 真机验证 Core Haptics、HealthKit、Live Activity。
@@ -112,6 +131,7 @@ At Ease 已完成 v0.1–v0.6 的核心路径：无登录呼吸/计时、情绪�
 | `0.4` | 内容基础设施 | ✅ 已完成 |
 | `0.5` | 订阅底座 | ✅ 代码完成，商店产品待配置 |
 | `0.6` | 订阅内容分发 | ✅ 代码完成，正式内容资产待上架 |
+| `0.7` | 远程音频与离线播放 | ✅ 代码完成，CDN 与正式资产待上架 |
 | `1.0` | 公开发布 | ⏳ |
 
 ## 验证状态
@@ -119,7 +139,7 @@ At Ease 已完成 v0.1–v0.6 的核心路径：无登录呼吸/计时、情绪�
 最近一次 At Ease 单元测试：
 
 ```text
-Executed 32 tests, with 0 failures
+Executed 41 tests, with 0 failures
 ** TEST SUCCEEDED **
 ```
 

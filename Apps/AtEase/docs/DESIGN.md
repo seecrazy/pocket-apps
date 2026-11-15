@@ -302,10 +302,11 @@ Freemium。
 
 `AtEaseContentManifest`
 
-- `schemaVersion`：当前为 1。
+- `schemaVersion`：v0.7 起为 2。
 - `items`：引导冥想条目。
 - 每条内容必须包含稳定 `id`、标题、副标题、导师/来源、时长、主题、免费/订阅标记。
 - 音频资产分为：`bundled`、`remote`、`generated`；当前 MVP 使用 `scripted` 本地结构化步骤。
+- `remoteAudio`：仅 `remote` 内容允许出现；包含 HTTPS URL 与 `fileExtension`。
 - 每条步骤包含 `title`、`text`、`durationSeconds`、可选触觉类型。
 - 资产台账字段保留：来源、授权类型、授权到期、是否允许 App 内分发、Content ID 状态。
 
@@ -506,6 +507,92 @@ App 启动 → 加载缓存 → refresh entitlement → 更新列表
 - 订阅过期后列表自动锁定，历史记录不删除。
 - 播放器二次判定未授权时不产生 PracticeSession。
 
+## 7.5 v0.7 远程音频与离线播放
+
+### 目标与非目标
+
+目标：
+
+- 将内容 schema 升级到 v2，为远程音频提供稳定描述。
+- 支持 `remote` 音频在首次播放前下载到 App 沙盒。
+- 同一条内容下载成功后，后续播放不再请求网络。
+- 下载中、成功、失败都有清晰状态。
+- 播放器仍先做订阅访问校验，再准备音频。
+- 音频失败不产生练习记录，也不阻断免费结构化练习。
+
+非目标：
+
+- 不做后台批量预下载。
+- 不做手动管理页和存储清理页。
+- 不做断点续传。
+- 不做 CDN 签名刷新。
+- 不在本版接入真实付费音频资产；当前 8 条内置内容仍为结构化原型。
+
+### 远程音频 schema
+
+```json
+{
+  "audioKind": "remote",
+  "remoteAudio": {
+    "url": "https://example.com/audio.m4a",
+    "fileExtension": "m4a"
+  }
+}
+```
+
+校验规则：
+
+1. `remote` 内容必须包含 `remoteAudio`。
+2. `scripted` / `bundled` 不允许带 `remoteAudio`。
+3. 远程 URL 必须是 HTTPS。
+4. 文件扩展名只允许 `m4a`、`mp3`、`wav`、`aac`。
+5. schema v2 保留现有步骤时长校验。
+
+### 下载与播放流程
+
+```text
+点击开始
+  → 订阅访问校验
+  → 判断 audioKind
+      scripted / bundled: 立即启动结构化播放
+      remote:
+        → 检查本地 audio.<ext>
+          存在：使用本地文件播放
+          不存在：进入 downloading → 下载 HTTPS 文件 → 移入沙盒 → 播放
+  → 下载成功后标记 downloaded
+  → 下载失败显示“音频暂时无法准备”，不写练习记录
+```
+
+本地路径：
+
+```text
+Documents/Downloads/<contentID>/audio.<fileExtension>
+```
+
+### 状态规则
+
+| 状态 | 含义 |
+|---|---|
+| `notApplicable` | scripted / bundled，无需下载 |
+| `notDownloaded` | remote 内容尚未下载 |
+| `downloading` | 正在获取远程音频 |
+| `downloaded` | 本地文件已存在 |
+| `failed` | 网络或文件移动失败 |
+
+UI 状态：
+
+1. `downloading` 显示“正在准备音频”。
+2. `failed` 显示“音频暂时无法准备”。
+3. 不使用警告色；按钮保持可用，可重试。
+4. 下载中隐藏播放按钮，避免同时触发多次。
+
+### 技术边界
+
+- `MeditationAudioPreparationService` 是唯一远程音频准备入口。
+- `ContentDownloadService` 仍负责文件下载与本地路径管理。
+- 播放服务协议便于替换 AVAudioPlayer / AVAudioEngine，并允许测试注入 mock。
+- schema v2 的 `remoteAudio` 可为空；正式音频资产上架前 UI 不显示下载入口。
+
 ## 8. 技术架构
 
 - iOS 17+
@@ -516,10 +603,12 @@ App 启动 → 加载缓存 → refresh entitlement → 更新列表
 - ActivityKit / WidgetKit Live Activity
 - Core Haptics 呼吸同步
 - ContentDownloadService 下载底座
+- MeditationAudioPreparationService 远程音频准备
+- MeditationAudioPlaybackService 本地音频播放协议
 - MeditationContentAccessService 内容访问判定
 - BGTaskScheduler 后续实现
 
-当前 v0.6 已支持订阅内容分层与本地结构化播放；远程音频与后台下载仍在后续版本。
+当前 v0.7 已支持远程音频下载、离线复用和本地播放底座；后台批量预下载与正式资产仍在后续版本。
 
 ## 9. 命名
 
@@ -544,6 +633,7 @@ At Ease 按六个阶段推进，避免一开始做成内容库：
 | `0.4` | 内容基础设施 | 引导冥想播放器、内容 schema、免费基础库、收藏与下载底座 |
 | `0.5` | 订阅闭环 | StoreKit 2、免费/订阅分层、试用、恢复购买、订阅管理 |
 | `0.6` | 订阅内容分发 | 订阅内容接入、访问判定、锁定/解锁联动 |
+| `0.7` | 远程音频与离线播放 | remoteAudio schema、沙盒下载、离线复用、播放底座 |
 | `1.0` | 公开发布 | 稳定性、无障碍、合规、截图、TestFlight 与审核 |
 
 版本推进约束：
@@ -570,6 +660,7 @@ At Ease 按六个阶段推进，避免一开始做成内容库：
 | 非声音练习 | 念头放下、身体扫描、环境音混音 | ✅ |
 | 内容 | 8 条引导冥想、schema、播放器、收藏、订阅分层 | ✅ |
 | 下载 | 状态协议与本地目录底座 | ✅ |
+| 远程音频 | schema v2、准备服务、播放协议、离线复用 | ✅ |
 | 订阅 | StoreKit 2 分层、缓存、恢复购买、低调入口 | ✅ |
 | 内容分发 | 访问判定、锁定卡片、播放器二次校验 | ✅ |
 
@@ -607,5 +698,9 @@ At Ease 按六个阶段推进，避免一开始做成内容库：
 - [x] 前 3 次练习无订阅提示，第 3 次后收尾卡片出现低调入口。
 - [x] 订阅失败、无网或恢复失败不阻断练习。
 - [x] 内容访问判定与分层列表过滤。
+- [x] remoteAudio schema 与 HTTPS / 扩展名校验。
+- [x] 远程音频下载失败不写练习记录。
+- [x] 本地已存在音频时不重复下载。
+- [x] scripted 内容不触发下载。
 - [x] 单元测试通过。
 - [x] 无第三方运行时依赖。
